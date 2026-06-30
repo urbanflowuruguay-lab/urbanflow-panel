@@ -93,7 +93,28 @@
     <h2>Tu eleccion ya esta en manos de nuestra cocina</h2>
     <p>Pronto te la llevaran a la mesa.</p>
     <p id="pedidoIdDisplay" style="color:var(--accent);margin-top:12px;font-size:12px"></p>
-    <button class="volver" onclick="volverCarta()">Volver a la carta</button>
+    <div style="margin-top:24px;display:flex;gap:12px">
+        <button class="volver" onclick="volverCarta()">Volver a la carta</button>
+        <button class="volver" onclick="showRating()" style="background:var(--accent2);color:white">Calificar ⭐</button>
+    </div>
+</div>
+
+<div class="estado-pedido" id="ratingModal" style="display:none">
+    <div style="font-size:48px;margin-bottom:16px">⭐</div>
+    <h2>Como estuvo tu experiencia?</h2>
+    <p style="margin-bottom:20px">Tu opinion nos ayuda a mejorar</p>
+    <div id="starContainer" style="display:flex;gap:8px;margin-bottom:20px;justify-content:center">
+        <span class="star-btn" onclick="setRating(1)" style="font-size:40px;cursor:pointer;opacity:0.3;transition:opacity 0.2s">★</span>
+        <span class="star-btn" onclick="setRating(2)" style="font-size:40px;cursor:pointer;opacity:0.3;transition:opacity 0.2s">★</span>
+        <span class="star-btn" onclick="setRating(3)" style="font-size:40px;cursor:pointer;opacity:0.3;transition:opacity 0.2s">★</span>
+        <span class="star-btn" onclick="setRating(4)" style="font-size:40px;cursor:pointer;opacity:0.3;transition:opacity 0.2s">★</span>
+        <span class="star-btn" onclick="setRating(5)" style="font-size:40px;cursor:pointer;opacity:0.3;transition:opacity 0.2s">★</span>
+    </div>
+    <p id="ratingLabel" style="color:var(--text2);margin-bottom:16px">Toca una estrella</p>
+    <div style="display:flex;gap:12px">
+        <button class="volver" onclick="closeRating()">Ahora no</button>
+        <button class="volver" id="btnSendRating" onclick="sendRating()" style="background:var(--accent2);color:white;display:none">Enviar</button>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -277,14 +298,18 @@ async function init() {
         return;
     }
     try {
-        const [empRes, mesaRes, prodRes] = await Promise.all([
+        const [empRes, mesaRes, prodRes, ratRes] = await Promise.all([
             sb.from("empresas").select("id,nombre,carta_template,logo_url").eq("id", empresaId).single(),
             sb.from("mesas").select("*").eq("mesa_token", mesaToken).single(),
-            sb.from("productos_empresa").select("*").eq("empresa_id", empresaId).eq("activo", true).order("categoria")
+            sb.from("productos_empresa").select("*").eq("empresa_id", empresaId).eq("activo", true).order("categoria"),
+            sb.from("calificaciones").select("estrellas").eq("empresa_id", empresaId)
         ]);
         empresaData = empRes.data;
         mesaData = mesaRes.data;
         productos = prodRes.data || [];
+        const ratings = ratRes.data || [];
+        empresaData._avgRating = ratings.length > 0 ? (ratings.reduce((s, r) => s + r.estrellas, 0) / ratings.length).toFixed(1) : null;
+        empresaData._totalRatings = ratings.length;
         if (!empresaData || !mesaData) {
             document.getElementById("mainContent").innerHTML = '<div class="empty" style="padding-top:80px"><p>Mesa no encontrada</p></div>';
             return;
@@ -300,6 +325,15 @@ async function init() {
 
         const initials = empresaData.nombre.split(" ").map(w => w[0]).join("").substring(0, 2).toUpperCase();
         p.render(document.getElementById("portadaContent"), empresaData.nombre, mesaData.numero, empresaData.logo_url, initials);
+
+        if (empresaData._avgRating) {
+            const stars = "★".repeat(Math.round(empresaData._avgRating)) + "☆".repeat(5 - Math.round(empresaData._avgRating));
+            const ratingHtml = `<div style="margin-top:12px;animation:fadeIn 0.6s ease 1.4s both">
+                <span style="color:${p.color};font-size:16px;letter-spacing:2px">${stars}</span>
+                <span style="color:${p.subColor};font-size:12px;margin-left:6px">${empresaData._avgRating} (${empresaData._totalRatings})</span>
+            </div>`;
+            document.getElementById("portadaContent").insertAdjacentHTML("beforeend", ratingHtml);
+        }
 
         sb.from("mesas").update({ estado: "ocupada" }).eq("id", mesaData.id).then(() => {});
         renderProductos();
@@ -420,6 +454,49 @@ async function enviarPedido() {
 function volverCarta() {
     document.getElementById("estadoPedido").classList.remove("show");
     renderProductos(document.querySelector(".cat-btn.active")?.textContent === "Todos" ? null : document.querySelector(".cat-btn.active")?.textContent);
+}
+
+let currentRating = 0;
+
+function setRating(n) {
+    currentRating = n;
+    const labels = ["", "Malo", "Regular", "Bien", "Muy bueno", "Excelente"];
+    document.getElementById("ratingLabel").textContent = labels[n];
+    document.getElementById("btnSendRating").style.display = "";
+    const stars = document.querySelectorAll(".star-btn");
+    stars.forEach((s, i) => { s.style.opacity = i < n ? "1" : "0.3"; s.style.color = i < n ? "#f5a623" : "inherit"; });
+}
+
+function showRating() {
+    document.getElementById("estadoPedido").classList.remove("show");
+    document.getElementById("ratingModal").style.display = "flex";
+    currentRating = 0;
+    document.getElementById("ratingLabel").textContent = "Toca una estrella";
+    document.getElementById("btnSendRating").style.display = "none";
+    document.querySelectorAll(".star-btn").forEach(s => { s.style.opacity = "0.3"; s.style.color = "inherit"; });
+}
+
+function closeRating() {
+    document.getElementById("ratingModal").style.display = "none";
+    volverCarta();
+}
+
+async function sendRating() {
+    if (currentRating === 0) return;
+    try {
+        await sb.from("calificaciones").insert({
+            empresa_id: empresaId,
+            mesa_token: mesaToken,
+            cliente_token: clienteToken,
+            estrellas: currentRating
+        });
+        document.getElementById("ratingModal").style.display = "none";
+        alert("Gracias por tu calificacion!");
+        volverCarta();
+    } catch (e) {
+        console.error("Error rating:", e);
+        volverCarta();
+    }
 }
 
 init();

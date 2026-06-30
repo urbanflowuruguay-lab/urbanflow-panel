@@ -138,6 +138,7 @@
         <div class="tab" id="tab_reservas" onclick="switchTab('reservas')" style="display:none">Reservas <span class="badge" id="badge_reservas" style="display:none">0</span></div>
         <div class="tab" id="tab_mesas" onclick="switchTab('mesas')" style="display:none">Mesas</div>
         <div class="tab" id="tab_productos" onclick="switchTab('productos')">Carta</div>
+        <div class="tab" id="tab_catalogo" onclick="switchTab('catalogo')">Catalogo</div>
         <div class="tab" id="tab_usuarios" onclick="switchTab('usuarios')">Usuarios</div>
         <div class="tab" id="tab_perfil" onclick="switchTab('perfil')">Perfil</div>
     </div>
@@ -235,6 +236,7 @@ function switchTab(tab) {
     else if (tab === "reservas") loadReservas();
     else if (tab === "mesas") loadMesas();
     else if (tab === "productos") loadProductos();
+    else if (tab === "catalogo") loadCatalogo();
     else if (tab === "usuarios") loadUsuarios();
     else if (tab === "perfil") loadPerfil();
 }
@@ -739,6 +741,141 @@ async function deleteProducto(id, nombre) {
     if (!confirm(`Eliminar "${nombre}"?`)) return;
     await sb.from("productos_empresa").delete().eq("id", id);
     loadProductos();
+}
+
+const CATALOGO_CATS = [
+    { id: "Menu", label: "Menu", icon: "📋" },
+    { id: "Recomendados", label: "Recomendados", icon: "⭐" },
+    { id: "Promociones", label: "Promociones", icon: "🔥" },
+    { id: "Frankfurters y Hungaras", label: "Frankfurters y Hungaras", icon: "🌭" },
+    { id: "Chivitos", label: "Chivitos", icon: "🥩" },
+    { id: "Sandwiches frios", label: "Sandwiches frios", icon: "🥪" },
+    { id: "Sandwiches calientes", label: "Sandwiches calientes", icon: "🌯" },
+    { id: "Pizzetas", label: "Pizzetas", icon: "🍕" },
+    { id: "Entradas", label: "Entradas", icon: "🥗" },
+    { id: "Carnes", label: "Carnes", icon: "🥩" },
+    { id: "Pescados", label: "Pescados", icon: "🐟" },
+    { id: "Pollos", label: "Pollos", icon: "🍗" },
+    { id: "Pastas artesanales", label: "Pastas artesanales", icon: "🍝" },
+    { id: "Ensaladas especiales", label: "Ensaladas especiales", icon: "🥙" },
+    { id: "Ensaladas", label: "Ensaladas", icon: "🥗" },
+    { id: "Milanesas", label: "Milanesas", icon: "🍖" },
+    { id: "Hamburguesas", label: "Hamburguesas", icon: "🍔" },
+    { id: "Omelettes", label: "Omelettes", icon: "🍳" },
+    { id: "Pizzeria", label: "Pizzeria", icon: "🍕" },
+    { id: "Postres", label: "Postres", icon: "🍰" },
+    { id: "Bebidas", label: "Bebidas", icon: "🥤" }
+];
+
+let catalogoFilter = "";
+
+async function loadCatalogo() {
+    const content = document.getElementById("content");
+    content.innerHTML = '<div style="text-align:center;padding:40px;color:#8b949e">Cargando catalogo...</div>';
+
+    const [sharedRes, myRes] = await Promise.all([
+        sb.from("catalogo_compartido").select("*").order("created_at", { ascending: false }),
+        sb.from("productos_empresa").select("nombre").eq("empresa_id", empresaId)
+    ]);
+    const shared = sharedRes.data || [];
+    const myNames = (myRes.data || []).map(p => p.nombre.toLowerCase());
+
+    const catsWithItems = [...new Set(shared.map(p => p.categoria).filter(Boolean))];
+    const visibleCats = CATALOGO_CATS.filter(c => catsWithItems.includes(c.id));
+
+    content.innerHTML = `
+        <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                <h3 style="color:#58a6ff;margin:0">Catalogo Compartido</h3>
+                <button class="btn btn-primary" onclick="showAddCatalogo()">+ Agregar al catalogo</button>
+            </div>
+            <p style="color:#8b949e;font-size:13px;margin-bottom:12px">Productos que otros negocios pueden importar a su carta</p>
+            
+            <div id="formCatalogo" style="display:none;margin-bottom:16px;padding:16px;background:#0d1117;border-radius:8px;border:1px solid #30363d">
+                <h4 style="color:#58a6ff;margin-bottom:8px">Agregar producto al catalogo compartido</h4>
+                <div class="form-row">
+                    <div class="form-group"><label>Nombre *</label><input type="text" id="catNombre"></div>
+                    <div class="form-group"><label>Precio referencia ($)</label><input type="number" id="catPrecio"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Categoria</label>
+                        <select id="catCategoria" style="width:100%;padding:8px;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9">
+                            <option value="">Seleccionar...</option>
+                            ${CATALOGO_CATS.map(c => `<option value="${c.id}">${c.icon} ${c.label}</option>`).join("")}
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group"><label>Descripcion</label><input type="text" id="catDescripcion"></div>
+                <div style="display:flex;gap:8px">
+                    <button class="btn btn-success" onclick="saveCatalogoItem()">Guardar</button>
+                    <button class="btn btn-secondary" onclick="document.getElementById('formCatalogo').style.display='none'">Cancelar</button>
+                </div>
+            </div>
+
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+                <button class="cat-btn ${!catalogoFilter ? 'active' : ''}" onclick="catalogoFilter='';loadCatalogo()" style="padding:4px 10px;border:1px solid #30363d;border-radius:16px;background:${!catalogoFilter?'#1f6feb':'transparent'};color:${!catalogoFilter?'white':'#8b949e'};cursor:pointer;font-size:12px">Todos</button>
+                ${visibleCats.map(c => `<button class="cat-btn" onclick="catalogoFilter='${c.id}';loadCatalogo()" style="padding:4px 10px;border:1px solid #30363d;border-radius:16px;background:${catalogoFilter===c.id?'#1f6feb':'transparent'};color:${catalogoFilter===c.id?'white':'#8b949e'};cursor:pointer;font-size:12px">${c.icon} ${c.label}</button>`).join("")}
+            </div>
+        </div>
+        <div id="catalogoGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px"></div>`;
+
+    let filtered = catalogoFilter ? shared.filter(p => p.categoria === catalogoFilter) : shared;
+    const grid = document.getElementById("catalogoGrid");
+    if (filtered.length === 0) {
+        grid.innerHTML = '<div style="text-align:center;padding:40px;color:#484f58;grid-column:1/-1">No hay productos en el catalogo</div>';
+        return;
+    }
+    grid.innerHTML = filtered.map(p => {
+        const alreadyHas = myNames.includes(p.nombre.toLowerCase());
+        return `<div class="card" style="padding:12px">
+            ${p.foto_url ? `<img src="${p.foto_url}" style="width:100%;height:100px;object-fit:cover;border-radius:6px;margin-bottom:8px">` : ''}
+            <div style="font-weight:600;font-size:14px;margin-bottom:2px">${p.nombre}</div>
+            ${p.descripcion ? `<div style="color:#8b949e;font-size:11px;margin-bottom:4px">${p.descripcion}</div>` : ''}
+            <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="color:#7ee787;font-weight:bold">${p.precio_referencia ? '$' + p.precio_referencia : ''}</span>
+                ${alreadyHas ? '<span style="color:#238636;font-size:11px">En tu carta</span>' :
+                `<button class="btn btn-success btn-sm" onclick="importCatalogo('${p.id}','${(p.nombre||'').replace(/'/g,"\\'")}','${p.precio_referencia||0}','${(p.descripcion||'').replace(/'/g,"\\'")}','${(p.categoria||'').replace(/'/g,"\\'")}','${p.foto_url||''}')">Importar</button>`}
+            </div>
+        </div>`;
+    }).join("");
+}
+
+function showAddCatalogo() {
+    document.getElementById("formCatalogo").style.display = "block";
+    document.getElementById("catNombre").value = "";
+    document.getElementById("catPrecio").value = "";
+    document.getElementById("catCategoria").selectedIndex = 0;
+    document.getElementById("catDescripcion").value = "";
+}
+
+async function saveCatalogoItem() {
+    const nombre = document.getElementById("catNombre").value.trim();
+    if (!nombre) { alert("Nombre requerido"); return; }
+    await sb.from("catalogo_compartido").insert({
+        nombre: nombre,
+        precio_referencia: parseFloat(document.getElementById("catPrecio").value) || 0,
+        categoria: document.getElementById("catCategoria").value,
+        descripcion: document.getElementById("catDescripcion").value.trim(),
+        creado_por: empresaId
+    });
+    alert("Agregado al catalogo");
+    loadCatalogo();
+}
+
+async function importCatalogo(id, nombre, precio, desc, cat, foto) {
+    await sb.from("productos_empresa").insert({
+        empresa_id: empresaId,
+        nombre: nombre,
+        precio: parseFloat(precio) || 0,
+        descripcion: desc,
+        categoria: cat,
+        foto_url: foto,
+        activo: true,
+        stock: 999
+    });
+    await sb.from("catalogo_compartido").update({ veces_importado: sb.rpc ? undefined : 0 }).eq("id", id);
+    alert(`"${nombre}" agregado a tu carta`);
+    loadCatalogo();
 }
 
 async function loadPerfil() {
