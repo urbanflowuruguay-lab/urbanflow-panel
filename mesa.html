@@ -308,13 +308,38 @@ async function init() {
     }
 }
 
+const ALL_CATS = [
+    { id: "Menu", label: "Menu", icon: "📋" },
+    { id: "Recomendados", label: "Recomendados", icon: "⭐" },
+    { id: "Promociones", label: "Promociones", icon: "🔥" },
+    { id: "Frankfurters y Hungaras", label: "Frankfurters y Hungaras", icon: "🌭" },
+    { id: "Chivitos", label: "Chivitos", icon: "🥩" },
+    { id: "Sandwiches frios", label: "Sandwiches frios", icon: "🥪" },
+    { id: "Sandwiches calientes", label: "Sandwiches calientes", icon: "🌯" },
+    { id: "Pizzetas", label: "Pizzetas", icon: "🍕" },
+    { id: "Entradas", label: "Entradas", icon: "🥗" },
+    { id: "Carnes", label: "Carnes", icon: "🥩" },
+    { id: "Pescados", label: "Pescados", icon: "🐟" },
+    { id: "Pollos", label: "Pollos", icon: "🍗" },
+    { id: "Pastas artesanales", label: "Pastas artesanales", icon: "🍝" },
+    { id: "Ensaladas especiales", label: "Ensaladas especiales", icon: "🥙" },
+    { id: "Ensaladas", label: "Ensaladas", icon: "🥗" },
+    { id: "Milanesas", label: "Milanesas", icon: "🍖" },
+    { id: "Hamburguesas", label: "Hamburguesas", icon: "🍔" },
+    { id: "Omelettes", label: "Omelettes", icon: "🍳" },
+    { id: "Pizzeria", label: "Pizzeria", icon: "🍕" },
+    { id: "Postres", label: "Postres", icon: "🍰" },
+    { id: "Bebidas", label: "Bebidas", icon: "🥤" }
+];
+
 function renderProductos(filtro) {
     let filtrados = productos;
     if (filtro) filtrados = productos.filter(p => p.categoria === filtro);
-    const cats = [...new Set(productos.map(p => p.categoria).filter(Boolean))];
+    const catsWithProducts = [...new Set(productos.map(p => p.categoria).filter(Boolean))];
+    const visibleCats = ALL_CATS.filter(c => catsWithProducts.includes(c.id));
     document.getElementById("categoriasBar").innerHTML = `
         <button class="cat-btn ${!filtro ? 'active' : ''}" onclick="renderProductos()">Todos</button>
-        ${cats.map(c => `<button class="cat-btn ${filtro === c ? 'active' : ''}" onclick="renderProductos('${c}')">${c}</button>`).join("")}`;
+        ${visibleCats.map(c => `<button class="cat-btn ${filtro === c.id ? 'active' : ''}" onclick="renderProductos('${c.id}')">${c.icon} ${c.label}</button>`).join("")}`;
     if (filtrados.length === 0) {
         document.getElementById("mainContent").innerHTML = '<div class="empty"><p>Sin productos disponibles</p></div>';
         return;
