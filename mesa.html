@@ -86,8 +86,9 @@
 <body>
 
 <div class="portada show" id="portada">
-    <img id="portadaBg" class="portada-bg" src="" style="display:none">
-    <div class="portada-overlay" id="portadaOverlay"></div>
+    <div id="portadaBgFallback" style="position:absolute;top:0;left:0;right:0;bottom:0;background:#000"></div>
+    <img id="portadaBg" src="" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;z-index:1">
+    <div class="portada-overlay" id="portadaOverlay" style="z-index:2"></div>
     <div class="portada-content">
         <img id="portadaLogo" class="portada-logo" src="" style="display:none">
         <div class="portada-nombre" id="portadaNombre">Restaurante</div>
@@ -179,9 +180,9 @@ function entrarCarta() {
 }
 
 function applyPortadaTheme(templateId) {
-    const t = themes[templateId] || themes.dark_elegance;
     const overlay = document.getElementById("portadaOverlay");
     const portadaBg = document.getElementById("portadaBg");
+    const fallback = document.getElementById("portadaBgFallback");
     const nombre = document.getElementById("portadaNombre");
     const mesa = document.getElementById("portadaMesa");
     const btn = document.querySelector(".portada-btn");
@@ -195,10 +196,12 @@ function applyPortadaTheme(templateId) {
         rustico: "linear-gradient(180deg, #3e2723 0%, #5d4037 50%, #2c1a12 100%)"
     };
     if (!hasImage) {
-        document.getElementById("portada").style.background = gradients[templateId] || gradients.dark_elegance;
+        fallback.style.background = gradients[templateId] || gradients.dark_elegance;
+        fallback.style.display = "block";
         portadaBg.style.display = "none";
     } else {
-        document.getElementById("portada").style.background = "#000";
+        fallback.style.display = "none";
+        portadaBg.style.display = "block";
     }
     switch(templateId) {
         case "dark_elegance": overlay.style.background = "rgba(0,0,0,0.4)"; nombre.style.color = "#d4af37"; mesa.style.color = "rgba(212,175,55,0.7)"; btn.style.borderColor = "rgba(212,175,55,0.4)"; btn.style.color = "#d4af37"; break;
