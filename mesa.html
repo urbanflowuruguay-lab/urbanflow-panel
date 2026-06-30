@@ -178,13 +178,12 @@ function entrarCarta() {
     document.getElementById("portada").classList.remove("show");
 }
 
-function applyPortadaTheme(templateId) {
+function applyPortadaTheme(templateId, hasImage) {
     const overlay = document.getElementById("portadaOverlay");
     const portadaBg = document.getElementById("portadaBg");
     const nombre = document.getElementById("portadaNombre");
     const mesa = document.getElementById("portadaMesa");
     const btn = document.querySelector(".portada-btn");
-    const hasImage = portadaBg.style.backgroundImage && portadaBg.style.backgroundImage !== "none";
     const gradients = {
         dark_elegance: "linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%)",
         editorial: "linear-gradient(180deg, #2c1810 0%, #4a2c20 50%, #1a0f0a 100%)",
@@ -193,7 +192,9 @@ function applyPortadaTheme(templateId) {
         glassmorphism: "linear-gradient(135deg, #667eea 0%, #764ba2 50%, #0f3460 100%)",
         rustico: "linear-gradient(180deg, #3e2723 0%, #5d4037 50%, #2c1a12 100%)"
     };
-    if (!hasImage) {
+    if (hasImage) {
+        portadaBg.style.background = "none";
+    } else {
         portadaBg.style.background = gradients[templateId] || gradients.dark_elegance;
     }
     switch(templateId) {
@@ -232,10 +233,11 @@ async function init() {
             logo.src = empresaData.logo_url;
             logo.style.display = "block";
         }
-        if (empresaData.portada_url) {
+        const hasPortada = !!empresaData.portada_url;
+        if (hasPortada) {
             document.getElementById("portadaBg").style.backgroundImage = `url(${empresaData.portada_url})`;
         }
-        applyPortadaTheme(empresaData.carta_template || "dark_elegance");
+        applyPortadaTheme(empresaData.carta_template || "dark_elegance", hasPortada);
         sb.from("mesas").update({ estado: "ocupada" }).eq("id", mesaData.id).then(() => {});
         renderProductos();
     } catch (e) {
