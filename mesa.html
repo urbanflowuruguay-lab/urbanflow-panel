@@ -222,10 +222,10 @@ async function init() {
             logo.src = empresaData.logo_url;
             logo.style.display = "block";
         }
+        applyPortadaTheme(empresaData.carta_template || "dark_elegance");
         if (empresaData.portada_url) {
             document.getElementById("portadaBg").style.backgroundImage = `url(${empresaData.portada_url})`;
         }
-        applyPortadaTheme(empresaData.carta_template || "dark_elegance");
         sb.from("mesas").update({ estado: "ocupada" }).eq("id", mesaData.id).then(() => {});
         renderProductos();
     } catch (e) {
