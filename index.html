@@ -747,12 +747,23 @@ async function loadPerfil() {
         </div>
         <div class="card">
             <h3>Portada de la Carta</h3>
-            <p style="color:#8b949e;font-size:13px;margin-bottom:12px">Imagen de fondo que se ve antes de entrar a la carta (recomendado: 1080x1920)</p>
-            <div class="upload-area" onclick="document.getElementById('portadaFile').click()" style="height:200px">
-                <img id="portadaPreview" src="${data.portada_url || ''}" style="${data.portada_url ? '' : 'display:none'};width:100%;height:100%;object-fit:cover">
-                <p id="portadaPlaceholder" style="${data.portada_url ? 'display:none' : ''}">Click para subir imagen de portada</p>
+            <p style="color:#8b949e;font-size:13px;margin-bottom:12px">Subí imágenes y hacé click en la que quieras usar como portada</p>
+            <div class="upload-area" onclick="document.getElementById('portadaFile').click()" style="height:120px;margin-bottom:12px">
+                <p id="portadaPlaceholder">+ Subir nueva imagen de portada</p>
             </div>
             <input type="file" id="portadaFile" accept="image/*" style="display:none" onchange="uploadPortada(this)">
+            <div id="portadaGallery" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:12px"></div>
+            <div id="portadaPreviewSection" style="display:none;margin-top:12px;border-top:1px solid #30363d;padding-top:12px">
+                <p style="color:#8b949e;font-size:12px;margin-bottom:8px">Preview de portada (como la ve el cliente):</p>
+                <div style="width:200px;height:360px;border-radius:12px;overflow:hidden;border:2px solid #30363d;position:relative;background:#000;margin:0 auto">
+                    <img id="portadaPreviewImg" src="" style="width:100%;height:100%;object-fit:cover">
+                    <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.8));padding:20px 12px;text-align:center">
+                        <div style="color:white;font-size:14px;font-weight:600" id="previewNombre">${data.nombre || ''}</div>
+                        <div style="color:rgba(255,255,255,0.6);font-size:11px;margin-top:4px">Mesa #-</div>
+                        <div style="border:1px solid rgba(255,255,255,0.4);border-radius:20px;padding:6px 16px;color:white;font-size:12px;margin-top:8px;display:inline-block">ENTRAR</div>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="card">
             <h3>Diseño de la Carta</h3>
@@ -800,6 +811,7 @@ async function loadPerfil() {
 
     renderTemplateGrid(data.carta_template || "dark_elegance");
     loadCollection();
+    loadPortadaGallery();
 
     document.getElementById("logoFile").addEventListener("change", async function() {
         const file = this.files[0];
@@ -848,13 +860,10 @@ async function saveFotos() {
 async function uploadPortada(input) {
     const file = input.files[0];
     if (!file) return;
-    document.getElementById("portadaPreview").src = URL.createObjectURL(file);
-    document.getElementById("portadaPreview").style.display = "block";
-    document.getElementById("portadaPlaceholder").style.display = "none";
     try {
         const compressed = await compressImage(file, 1080, 0.75);
         const path = `empresa_${empresaId}/portada_${Date.now()}.jpg`;
-        const { data, error } = await sb.storage.from("ocio_fotos").upload(path, compressed, { upsert: true });
+        const { data, error } = await sb.storage.from("ocio_fotos").upload(path, compressed);
         if (error) {
             alert("Error subiendo imagen: " + error.message);
             return;
@@ -866,7 +875,71 @@ async function uploadPortada(input) {
             return;
         }
         empresaData.portada_url = urlData.publicUrl;
-        alert("Portada guardada");
+        alert("Portada subida y activada");
+        loadPortadaGallery();
+        input.value = "";
+    } catch (e) {
+        alert("Error: " + e.message);
+    }
+}
+
+async function loadPortadaGallery() {
+    const gallery = document.getElementById("portadaGallery");
+    const previewSection = document.getElementById("portadaPreviewSection");
+    if (!gallery) return;
+    try {
+        const { data: files, error } = await sb.storage.from("ocio_fotos").list(`empresa_${empresaId}`, {
+            limit: 50,
+            sortBy: { column: "created_at", order: "desc" }
+        });
+        if (error) {
+            gallery.innerHTML = '<p style="color:#da3633;font-size:12px">Error cargando imágenes</p>';
+            return;
+        }
+        const portadas = (files || []).filter(f => f.name.startsWith("portada_"));
+        if (portadas.length === 0) {
+            gallery.innerHTML = '<p style="color:#484f58;font-size:12px">No hay imágenes de portada</p>';
+            previewSection.style.display = "none";
+            return;
+        }
+        gallery.innerHTML = portadas.map(f => {
+            const { data: urlData } = sb.storage.from("ocio_fotos").getPublicUrl(`empresa_${empresaId}/${f.name}`);
+            const isActive = empresaData.portada_url === urlData.publicUrl;
+            return `<div onclick="selectPortada('${urlData.publicUrl}')" style="cursor:pointer;border-radius:8px;overflow:hidden;border:2px solid ${isActive ? '#238636' : '#30363d'};position:relative;height:100px">
+                <img src="${urlData.publicUrl}" style="width:100%;height:100%;object-fit:cover">
+                ${isActive ? '<div style="position:absolute;top:4px;right:4px;background:#238636;color:white;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:12px">✓</div>' : ''}
+                <div onclick="event.stopPropagation();deletePortada('${f.name}','${urlData.publicUrl}')" style="position:absolute;top:4px;left:4px;background:rgba(218,54,51,0.9);color:white;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer">✕</div>
+            </div>`;
+        }).join("");
+        if (empresaData.portada_url) {
+            previewSection.style.display = "block";
+            document.getElementById("portadaPreviewImg").src = empresaData.portada_url;
+        }
+    } catch (e) {
+        gallery.innerHTML = '<p style="color:#da3633;font-size:12px">Error: ' + e.message + '</p>';
+    }
+}
+
+async function selectPortada(url) {
+    const { error } = await sb.from("empresas").update({ portada_url: url }).eq("id", empresaId);
+    if (error) {
+        alert("Error: " + error.message);
+        return;
+    }
+    empresaData.portada_url = url;
+    alert("Portada activada");
+    loadPortadaGallery();
+}
+
+async function deletePortada(filename, url) {
+    if (!confirm("Eliminar esta imagen de portada?")) return;
+    try {
+        await sb.storage.from("ocio_fotos").remove([`empresa_${empresaId}/${filename}`]);
+        if (empresaData.portada_url === url) {
+            await sb.from("empresas").update({ portada_url: null }).eq("id", empresaId);
+            empresaData.portada_url = null;
+        }
+        loadPortadaGallery();
     } catch (e) {
         alert("Error: " + e.message);
     }
