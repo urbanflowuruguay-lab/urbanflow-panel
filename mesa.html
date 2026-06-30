@@ -192,9 +192,7 @@ function applyPortadaTheme(templateId, hasImage) {
         glassmorphism: "linear-gradient(135deg, #667eea 0%, #764ba2 50%, #0f3460 100%)",
         rustico: "linear-gradient(180deg, #3e2723 0%, #5d4037 50%, #2c1a12 100%)"
     };
-    if (hasImage) {
-        portadaBg.style.background = "none";
-    } else {
+    if (!hasImage) {
         portadaBg.style.background = gradients[templateId] || gradients.dark_elegance;
     }
     switch(templateId) {
