@@ -622,6 +622,7 @@ async function loadProductos() {
                     <option value="Postres">Postres</option>
                     <option value="Bebidas">Bebidas</option>
                 </select>
+                <input type="text" id="prodCategoriaCustom" placeholder="O escribi una categoria nueva..." style="width:100%;padding:8px 12px;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;font-size:13px;margin-top:6px">
             </div>
         </div>
         <div class="form-group"><label>Descripcion</label><textarea id="prodDescripcion"></textarea></div>
@@ -683,6 +684,7 @@ function showAddProducto() {
     document.getElementById("prodPrecio").value = "";
     document.getElementById("prodStock").value = "0";
     document.getElementById("prodCategoria").selectedIndex = 0;
+    document.getElementById("prodCategoriaCustom").value = "";
     document.getElementById("prodDescripcion").value = "";
     document.getElementById("prodFoto").value = "";
     document.getElementById("prodFotoPreview").style.display = "none";
@@ -696,7 +698,16 @@ function editProducto(id, nombre, precio, stock, desc, cat, foto) {
     document.getElementById("prodNombre").value = nombre;
     document.getElementById("prodPrecio").value = precio;
     document.getElementById("prodStock").value = stock;
-    document.getElementById("prodCategoria").value = cat;
+    const sel = document.getElementById("prodCategoria");
+    const customInput = document.getElementById("prodCategoriaCustom");
+    const matchOption = Array.from(sel.options).find(o => o.value === cat);
+    if (matchOption) {
+        sel.value = cat;
+        customInput.value = "";
+    } else {
+        sel.value = "";
+        customInput.value = cat || "";
+    }
     document.getElementById("prodDescripcion").value = desc;
     document.getElementById("prodFoto").value = foto;
     if (foto) {
@@ -711,12 +722,16 @@ function cancelProducto() { document.getElementById("formProducto").style.displa
 
 async function saveProducto() {
     const id = document.getElementById("prodId").value;
+    const selCat = document.getElementById("prodCategoria").value.trim();
+    const customCat = document.getElementById("prodCategoriaCustom").value.trim();
+    const categoria = customCat || selCat;
+    if (!categoria) { alert("Selecciona o escribe una categoria"); return; }
     const data = {
         empresa_id: empresaId,
         nombre: document.getElementById("prodNombre").value.trim(),
         precio: parseFloat(document.getElementById("prodPrecio").value) || 0,
         stock: parseInt(document.getElementById("prodStock").value) || 0,
-        categoria: document.getElementById("prodCategoria").value.trim(),
+        categoria: categoria,
         descripcion: document.getElementById("prodDescripcion").value.trim(),
         foto_url: document.getElementById("prodFoto").value.trim(),
         activo: true

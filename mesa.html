@@ -371,9 +371,11 @@ function renderProductos(filtro) {
     if (filtro) filtrados = productos.filter(p => p.categoria === filtro);
     const catsWithProducts = [...new Set(productos.map(p => p.categoria).filter(Boolean))];
     const visibleCats = ALL_CATS.filter(c => catsWithProducts.includes(c.id));
+    const customCats = catsWithProducts.filter(c => !ALL_CATS.find(a => a.id === c)).map(c => ({ id: c, label: c, icon: "📌" }));
+    const allVisible = [...visibleCats, ...customCats];
     document.getElementById("categoriasBar").innerHTML = `
         <button class="cat-btn ${!filtro ? 'active' : ''}" onclick="renderProductos()">Todos</button>
-        ${visibleCats.map(c => `<button class="cat-btn ${filtro === c.id ? 'active' : ''}" onclick="renderProductos('${c.id}')">${c.icon} ${c.label}</button>`).join("")}`;
+        ${allVisible.map(c => `<button class="cat-btn ${filtro === c.id ? 'active' : ''}" onclick="renderProductos('${c.id}')">${c.icon} ${c.label}</button>`).join("")}`;
     if (filtrados.length === 0) {
         document.getElementById("mainContent").innerHTML = '<div class="empty"><p>Sin productos disponibles</p></div>';
         return;
