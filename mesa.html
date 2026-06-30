@@ -72,7 +72,7 @@
         /* PORTADA */
         .portada { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 500; background: #000; }
         .portada.show { display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .portada-bg { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-size: 100% 100%; background-repeat: no-repeat; background-position: center; background-color: #000; }
+        .portada-bg { position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; object-fit: contain; background: #000; }
         .portada-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
         .portada-content { position: relative; z-index: 2; text-align: center; padding: 32px; }
         .portada-logo { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid rgba(255,255,255,0.3); margin-bottom: 20px; }
@@ -86,7 +86,7 @@
 <body>
 
 <div class="portada show" id="portada">
-    <div class="portada-bg" id="portadaBg"></div>
+    <img id="portadaBg" class="portada-bg" src="" style="display:none">
     <div class="portada-overlay" id="portadaOverlay"></div>
     <div class="portada-content">
         <img id="portadaLogo" class="portada-logo" src="" style="display:none">
@@ -185,14 +185,28 @@ function applyPortadaTheme(templateId) {
     const nombre = document.getElementById("portadaNombre");
     const mesa = document.getElementById("portadaMesa");
     const btn = document.querySelector(".portada-btn");
-    const hasImage = portadaBg.style.backgroundImage && portadaBg.style.backgroundImage !== "none";
+    const hasImage = portadaBg.src && !portadaBg.src.endsWith("/");
+    const gradients = {
+        dark_elegance: "linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%)",
+        editorial: "linear-gradient(180deg, #2c1810 0%, #4a2c20 50%, #1a0f0a 100%)",
+        minimalista: "linear-gradient(135deg, #111 0%, #333 50%, #111 100%)",
+        bold_colorido: "linear-gradient(135deg, #e63946 0%, #1d3557 50%, #111 100%)",
+        glassmorphism: "linear-gradient(135deg, #667eea 0%, #764ba2 50%, #0f3460 100%)",
+        rustico: "linear-gradient(180deg, #3e2723 0%, #5d4037 50%, #2c1a12 100%)"
+    };
+    if (!hasImage) {
+        document.getElementById("portada").style.background = gradients[templateId] || gradients.dark_elegance;
+        portadaBg.style.display = "none";
+    } else {
+        document.getElementById("portada").style.background = "#000";
+    }
     switch(templateId) {
-        case "dark_elegance": if (!hasImage) portadaBg.style.background = "linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%)"; overlay.style.background = "rgba(0,0,0,0.4)"; nombre.style.color = "#d4af37"; mesa.style.color = "rgba(212,175,55,0.7)"; btn.style.borderColor = "rgba(212,175,55,0.4)"; btn.style.color = "#d4af37"; break;
-        case "editorial": if (!hasImage) portadaBg.style.background = "linear-gradient(180deg, #2c1810 0%, #4a2c20 50%, #1a0f0a 100%)"; overlay.style.background = "rgba(0,0,0,0.3)"; nombre.style.color = "#faf6ee"; mesa.style.color = "rgba(250,246,238,0.6)"; btn.style.borderColor = "rgba(250,246,238,0.4)"; btn.style.color = "#faf6ee"; break;
-        case "minimalista": if (!hasImage) portadaBg.style.background = "linear-gradient(135deg, #111 0%, #333 50%, #111 100%)"; overlay.style.background = "rgba(0,0,0,0.5)"; nombre.style.color = "#ffffff"; mesa.style.color = "rgba(255,255,255,0.6)"; btn.style.borderColor = "rgba(255,255,255,0.5)"; btn.style.color = "#ffffff"; break;
-        case "bold_colorido": if (!hasImage) portadaBg.style.background = "linear-gradient(135deg, #e63946 0%, #1d3557 50%, #111 100%)"; overlay.style.background = "rgba(0,0,0,0.3)"; nombre.style.color = "#f1faee"; mesa.style.color = "rgba(241,250,238,0.7)"; btn.style.borderColor = "rgba(241,250,238,0.5)"; btn.style.color = "#f1faee"; break;
-        case "glassmorphism": if (!hasImage) portadaBg.style.background = "linear-gradient(135deg, #667eea 0%, #764ba2 50%, #0f3460 100%)"; overlay.style.background = "rgba(0,0,0,0.2)"; nombre.style.color = "#ffffff"; mesa.style.color = "rgba(255,255,255,0.7)"; btn.style.borderColor = "rgba(255,255,255,0.4)"; btn.style.color = "#ffffff"; break;
-        case "rustico": if (!hasImage) portadaBg.style.background = "linear-gradient(180deg, #3e2723 0%, #5d4037 50%, #2c1a12 100%)"; overlay.style.background = "rgba(0,0,0,0.3)"; nombre.style.color = "#f5f0e8"; mesa.style.color = "rgba(245,240,238,0.6)"; btn.style.borderColor = "rgba(245,240,238,0.4)"; btn.style.color = "#f5f0e8"; break;
+        case "dark_elegance": overlay.style.background = "rgba(0,0,0,0.4)"; nombre.style.color = "#d4af37"; mesa.style.color = "rgba(212,175,55,0.7)"; btn.style.borderColor = "rgba(212,175,55,0.4)"; btn.style.color = "#d4af37"; break;
+        case "editorial": overlay.style.background = "rgba(0,0,0,0.3)"; nombre.style.color = "#faf6ee"; mesa.style.color = "rgba(250,246,238,0.6)"; btn.style.borderColor = "rgba(250,246,238,0.4)"; btn.style.color = "#faf6ee"; break;
+        case "minimalista": overlay.style.background = "rgba(0,0,0,0.5)"; nombre.style.color = "#ffffff"; mesa.style.color = "rgba(255,255,255,0.6)"; btn.style.borderColor = "rgba(255,255,255,0.5)"; btn.style.color = "#ffffff"; break;
+        case "bold_colorido": overlay.style.background = "rgba(0,0,0,0.3)"; nombre.style.color = "#f1faee"; mesa.style.color = "rgba(241,250,238,0.7)"; btn.style.borderColor = "rgba(241,250,238,0.5)"; btn.style.color = "#f1faee"; break;
+        case "glassmorphism": overlay.style.background = "rgba(0,0,0,0.2)"; nombre.style.color = "#ffffff"; mesa.style.color = "rgba(255,255,255,0.7)"; btn.style.borderColor = "rgba(255,255,255,0.4)"; btn.style.color = "#ffffff"; break;
+        case "rustico": overlay.style.background = "rgba(0,0,0,0.3)"; nombre.style.color = "#f5f0e8"; mesa.style.color = "rgba(245,240,238,0.6)"; btn.style.borderColor = "rgba(245,240,238,0.4)"; btn.style.color = "#f5f0e8"; break;
     }
 }
 
@@ -224,7 +238,9 @@ async function init() {
         }
         applyPortadaTheme(empresaData.carta_template || "dark_elegance");
         if (empresaData.portada_url) {
-            document.getElementById("portadaBg").style.backgroundImage = `url(${empresaData.portada_url})`;
+            const bg = document.getElementById("portadaBg");
+            bg.src = empresaData.portada_url;
+            bg.style.display = "block";
         }
         sb.from("mesas").update({ estado: "ocupada" }).eq("id", mesaData.id).then(() => {});
         renderProductos();
