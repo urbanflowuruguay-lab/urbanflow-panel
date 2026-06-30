@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cocina - UrbanFlow</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0d1117; color: #c9d1d9; min-height: 100vh; }
+        .header { background: #161b22; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #30363d; }
+        .header h1 { font-size: 20px; color: #58a6ff; }
+        .header .subtitle { color: #8b949e; font-size: 13px; }
+        .header .status { display: flex; align-items: center; gap: 8px; }
+        .header .dot { width: 10px; height: 10px; border-radius: 50%; background: #238636; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .container { padding: 16px; max-width: 1200px; margin: 0 auto; }
+        .stats { display: flex; gap: 12px; margin-bottom: 16px; }
+        .stat { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px 20px; text-align: center; flex: 1; }
+        .stat .num { font-size: 28px; font-weight: bold; }
+        .stat .label { font-size: 11px; color: #8b949e; text-transform: uppercase; }
+        .pedidos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+        .pedido-card { background: #161b22; border: 2px solid #30363d; border-radius: 12px; padding: 16px; transition: border-color 0.3s; }
+        .pedido-card.nuevo { border-color: #1f6feb; animation: glow 2s infinite; }
+        @keyframes glow { 0%, 100% { box-shadow: 0 0 5px rgba(31,111,235,0.3); } 50% { box-shadow: 0 0 15px rgba(31,111,235,0.5); } }
+        .pedido-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .pedido-id { font-size: 18px; font-weight: bold; color: #58a6ff; }
+        .pedido-tiempo { color: #8b949e; font-size: 12px; }
+        .pedido-tipo { padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; background: #21262d; color: #c9d1d9; }
+        .pedido-items { margin-bottom: 12px; }
+        .pedido-item { padding: 6px 0; border-bottom: 1px solid #21262d; font-size: 15px; display: flex; justify-content: space-between; }
+        .pedido-item:last-child { border-bottom: none; }
+        .pedido-item .qty { color: #58a6ff; font-weight: bold; margin-right: 8px; }
+        .pedido-notas { background: #0d1117; border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; font-size: 13px; color: #f0e68c; }
+        .pedido-actions { display: flex; gap: 8px; }
+        .btn { padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: opacity 0.2s; flex: 1; }
+        .btn:hover { opacity: 0.85; }
+        .btn-preparar { background: #1f6feb; color: white; }
+        .btn-listo { background: #238636; color: white; }
+        .btn-cancelar { background: #da3633; color: white; flex: 0; padding: 10px 14px; }
+        .empty { text-align: center; padding: 60px 20px; color: #484f58; font-size: 18px; }
+        #loginSection { max-width: 400px; margin: 80px auto; }
+        #loginSection h2 { color: #58a6ff; margin-bottom: 24px; text-align: center; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; color: #8b949e; font-size: 12px; margin-bottom: 4px; text-transform: uppercase; }
+        .form-group input { width: 100%; padding: 12px 14px; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: #c9d1d9; font-size: 16px; text-align: center; letter-spacing: 8px; }
+        .form-group input:focus { border-color: #58a6ff; outline: none; }
+        .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; }
+        .btn-primary { background: #1f6feb; color: white; width: 100%; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+<div id="loginSection" class="container">
+    <h2>Cocina</h2>
+    <div class="card">
+        <div class="form-group">
+            <label>PIN</label>
+            <input type="password" id="pinInput" maxlength="6" placeholder="****" inputmode="numeric" autofocus>
+        </div>
+        <button class="btn-primary" onclick="loginPin()">Entrar</button>
+        <p id="loginError" style="color:#da3633;text-align:center;margin-top:12px;display:none"></p>
+    </div>
+</div>
+
+<div id="kitchenSection" style="display:none">
+    <div class="header">
+        <div>
+            <h1 id="empresaNombre">Cocina</h1>
+            <span class="subtitle">Pedidos para preparar</span>
+        </div>
+        <div class="status">
+            <span class="dot"></span>
+            <span style="color:#7ee787;font-size:13px">En linea</span>
+        </div>
+    </div>
+    <div class="container">
+        <div class="stats">
+            <div class="stat"><div class="num" style="color:#f0e68c" id="statRecibidos">0</div><div class="label">Nuevos</div></div>
+            <div class="stat"><div class="num" style="color:#f0e68c" id="statPreparando">0</div><div class="label">Preparando</div></div>
+            <div class="stat"><div class="num" style="color:#7ee787" id="statListos">0</div><div class="label">Listos</div></div>
+        </div>
+        <div id="pedidosContainer"></div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://eyfgkopaamnkprzpwocz.supabase.co";
+const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5Zmdrb3BhYW1ua3ByenB3b2N6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2MTk0ODMsImV4cCI6MjA5NDE5NTQ4M30.bXkq4Ks3p2yb2SQH76__8jXhmM5Thi2izIL5UPkKa0I";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+let empresaId = "";
+let empresaData = null;
+let usuarioData = null;
+let prevRecibidos = 0;
+
+const notifSound = new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgip2+q2EcDjiRtculcBwLH3y6xZ9TEwwfjL3NplkRCx+St8miVhQMG5C3yZ9VEQsdkLjJn1YSDBySt8eYUxEJHZK4yJZQDgcdlLjHlE0NBR2VuMeTTQ0DHpW5xo1KCwEelrjFi0UJAB+XucOIRAEAH5i6wIVB/wAhmbrAfD37ACOausB3OvkAKJy6v3I39wAmnbrAbzPzAC2dub9sMPEAMp25v2kv7wA0nrm9ZSzsADSfub1jKusANJ+5vV8o5wA1n7m9XSbiADafub1bIdoANp+5vVkf1QA3n7m9WR3SADifub1XGs8AOp+5vVcZywA5n7m9VhfIADufub1WFcYAPJ+5vVUUwQA9n7m9VRK7AD6fub1VEbYAP5+5vVMOsgBAn7m9UwuwAEGfub1SCa0AQp+5vVEHqgBDn7m9UAWnAESfub1PA6MARZ+5vU4ApABGn7m9Tf6hAEefub1M/Z8ASJ+5vUv8nQBJn7m9SvubAEqfub1J+pgAS5+5vUj5lgBLn7m9R/eVAEyfub1G9pMATJ+5vUX0kABNn7m9RPKMAE6fub1D8YkAT5+5vULwhwBQn7m9QfCEAFCfub0=");
+
+function playNotif() {
+    notifSound.currentTime = 0;
+    notifSound.play().catch(() => {});
+}
+
+const params = new URLSearchParams(window.location.search);
+empresaId = params.get("empresa") || "";
+
+if (empresaId) {
+    document.getElementById("loginSection").style.display = "none";
+    document.getElementById("kitchenSection").style.display = "block";
+    loadPedidos();
+    setInterval(loadPedidos, 10000);
+} else {
+    document.getElementById("pinInput").addEventListener("keypress", e => { if (e.key === "Enter") loginPin(); });
+}
+
+async function loginPin() {
+    const pin = document.getElementById("pinInput").value.trim();
+    if (!pin) { showError("Ingresa tu PIN"); return; }
+
+    const { data: usuarios } = await sb.from("usuarios_empresa").select("*, empresas(id,nombre,rubro_tipo)").eq("pin", pin).eq("activo", true);
+    if (!usuarios || usuarios.length === 0) { showError("PIN incorrecto"); return; }
+
+    const usr = usuarios[0];
+    if (usr.rol !== "cocina" && usr.rol !== "admin") {
+        showError("Este PIN no tiene acceso a cocina");
+        return;
+    }
+
+    empresaId = usr.empresa_id;
+    empresaData = usr.empresas;
+    usuarioData = usr;
+
+    document.getElementById("empresaNombre").textContent = empresaData?.nombre || "Cocina";
+    document.getElementById("loginSection").style.display = "none";
+    document.getElementById("kitchenSection").style.display = "block";
+    loadPedidos();
+    setInterval(loadPedidos, 10000);
+}
+
+function showError(msg) {
+    const el = document.getElementById("loginError");
+    el.textContent = msg;
+    el.style.display = "block";
+}
+
+async function loadPedidos() {
+    if (!empresaId) return;
+    const { data: pedidos } = await sb.from("pedidos").select("*").eq("empresa_id", empresaId).order("created_at", { ascending: true });
+
+    const activos = (pedidos || []).filter(p => p.estado === "recibido" || p.estado === "preparando");
+    const recibidos = activos.filter(p => p.estado === "recibido");
+    const preparando = activos.filter(p => p.estado === "preparando");
+    const listos = (pedidos || []).filter(p => p.estado === "listo");
+
+    document.getElementById("statRecibidos").textContent = recibidos.length;
+    document.getElementById("statPreparando").textContent = preparando.length;
+    document.getElementById("statListos").textContent = listos.length;
+
+    if (recibidos.length > prevRecibidos) playNotif();
+    prevRecibidos = recibidos.length;
+
+    const container = document.getElementById("pedidosContainer");
+    const todos = [...recibidos, ...preparando];
+
+    if (todos.length === 0) {
+        container.innerHTML = '<div class="empty">No hay pedidos pendientes</div>';
+        return;
+    }
+
+    container.innerHTML = '<div class="pedidos-grid">' + todos.map(p => {
+        const fecha = new Date(p.created_at);
+        const mins = Math.floor((Date.now() - fecha.getTime()) / 60000);
+        const tiempo = mins < 1 ? "Ahora" : mins + " min";
+        const esNuevo = p.estado === "recibido";
+        let items = [];
+        try { items = typeof p.items === "string" ? JSON.parse(p.items) : (p.items || []); } catch(e) {}
+        const itemsHtml = items.map(i => `<div class="pedido-item"><span><span class="qty">${i.cantidad || 1}x</span>${i.nombre || i}</span></div>`).join("");
+
+        let acciones = "";
+        if (p.estado === "recibido") {
+            acciones = `<div class="pedido-actions">
+                <button class="btn btn-preparar" onclick="updatePedido('${p.id}','preparando')">Preparar</button>
+                <button class="btn btn-cancelar" onclick="updatePedido('${p.id}','cancelado')"></button>
+            </div>`;
+        } else {
+            acciones = `<div class="pedido-actions">
+                <button class="btn btn-listo" onclick="updatePedido('${p.id}','listo')">Listo</button>
+                <button class="btn btn-cancelar" onclick="updatePedido('${p.id}','cancelado')"></button>
+            </div>`;
+        }
+
+        return `<div class="pedido-card ${esNuevo ? 'nuevo' : ''}">
+            <div class="pedido-header">
+                <span class="pedido-id">#${p.id.substring(0,8).toUpperCase()}</span>
+                <span class="pedido-tiempo">${tiempo}</span>
+            </div>
+            <div class="pedido-tipo">${p.tipo_entrega || "Retiro"}</div>
+            <div class="pedido-items">${itemsHtml || '<div class="pedido-item">' + (p.notas || "Sin detalles") + '</div>'}</div>
+            ${p.notas ? `<div class="pedido-notas">${p.notas}</div>` : ""}
+            ${acciones}
+        </div>`;
+    }).join("") + '</div>';
+}
+
+async function updatePedido(id, nuevoEstado) {
+    await sb.from("pedidos").update({ estado: nuevoEstado }).eq("id", id);
+    loadPedidos();
+}
+</script>
+</body>
+</html>

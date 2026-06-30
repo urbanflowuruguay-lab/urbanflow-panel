@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Delivery - UrbanFlow</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0d1117; color: #c9d1d9; min-height: 100vh; }
+        .header { background: #161b22; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; position: sticky; top: 0; z-index: 100; }
+        .header h1 { font-size: 16px; color: #58a6ff; }
+        .header .rest-name { color: #8b949e; font-size: 12px; }
+        .container { padding: 12px; max-width: 600px; margin: 0 auto; padding-bottom: 80px; }
+        .pedido-card { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+        .pedido-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .pedido-id { font-weight: bold; color: #58a6ff; font-size: 15px; }
+        .pedido-estado { padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+        .estado-listo { background: #238636; color: #7ee787; }
+        .estado-en_camino { background: #9e6a03; color: #f0e68c; }
+        .pedido-info { color: #8b949e; font-size: 13px; margin-bottom: 8px; line-height: 1.6; }
+        .pedido-direccion { background: #0d1117; border-radius: 6px; padding: 8px 12px; margin-bottom: 10px; font-size: 13px; }
+        .pedido-actions { display: flex; gap: 8px; }
+        .btn { padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; flex: 1; }
+        .btn:active { opacity: 0.8; }
+        .btn-entregar { background: #238636; color: white; }
+        .btn-map { background: #1f6feb; color: white; }
+        .btn-navegar { background: #9e6a03; color: white; }
+        .empty { text-align: center; padding: 60px 20px; color: #484f58; }
+        .status-bar { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
+        .dot-on { background: #238636; animation: pulse 2s infinite; }
+        .dot-off { background: #da3633; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        #loginSection { max-width: 400px; margin: 60px auto; padding: 0 16px; }
+        #loginSection h2 { color: #58a6ff; margin-bottom: 20px; text-align: center; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; color: #8b949e; font-size: 12px; margin-bottom: 4px; text-transform: uppercase; }
+        .form-group input { width: 100%; padding: 12px; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: #c9d1d9; font-size: 16px; text-align: center; letter-spacing: 8px; }
+        .form-group input:focus { border-color: #58a6ff; outline: none; }
+        .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; }
+        .btn-primary { background: #1f6feb; color: white; width: 100%; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: 600; }
+        .btn-cerrar { background: #da3633; color: white; padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+<div id="loginSection">
+    <h2>Delivery</h2>
+    <div class="card">
+        <div class="form-group">
+            <label>PIN del restaurante</label>
+            <input type="password" id="pinInput" maxlength="6" placeholder="****" inputmode="numeric" autofocus>
+        </div>
+        <button class="btn-primary" onclick="loginPin()">Entrar</button>
+        <p id="loginError" style="color:#da3633;text-align:center;margin-top:12px;display:none"></p>
+    </div>
+</div>
+
+<div id="deliverySection" style="display:none">
+    <div class="header">
+        <div>
+            <h1 id="empresaNombre">Delivery</h1>
+            <span class="rest-name" id="restInfo"></span>
+        </div>
+        <button class="btn-cerrar" onclick="logout()">Salir</button>
+    </div>
+    <div class="container">
+        <div class="status-bar">
+            <span class="dot dot-on" id="statusDot"></span>
+            <span id="statusText">Conectado</span>
+            <span style="flex:1"></span>
+            <span style="color:#8b949e;font-size:12px" id="pedidoCount">0 pedidos</span>
+        </div>
+        <div id="pedidosContainer">
+            <div class="empty">Cargando pedidos...</div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://eyfgkopaamnkprzpwocz.supabase.co";
+const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5Zmdrb3BhYW1ua3ByenB3b2N6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2MTk0ODMsImV4cCI6MjA5NDE5NTQ4M30.bXkq4Ks3p2yb2SQH76__8jXhmM5Thi2izIL5UPkKa0I";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+const params = new URLSearchParams(window.location.search);
+let empresaId = params.get("empresa") || "";
+let empresaData = null;
+let usuarioData = null;
+let myLat = -34.9011, myLon = -56.1645;
+
+const paramsQR = new URLSearchParams(window.location.search);
+empresaId = paramsQR.get("empresa") || "";
+
+if (empresaId) {
+    document.getElementById("loginSection").style.display = "none";
+    document.getElementById("deliverySection").style.display = "block";
+    startDelivery();
+} else {
+    document.getElementById("pinInput").addEventListener("keypress", e => { if (e.key === "Enter") loginPin(); });
+}
+
+async function loginPin() {
+    const pin = document.getElementById("pinInput").value.trim();
+    if (!pin) { showError("Ingresa el PIN"); return; }
+
+    const { data: usuarios } = await sb.from("usuarios_empresa").select("*, empresas(id,nombre)").eq("pin", pin).eq("activo", true);
+    if (!usuarios || usuarios.length === 0) { showError("PIN incorrecto"); return; }
+
+    const usr = usuarios[0];
+    if (usr.rol !== "delivery" && usr.rol !== "admin") {
+        showError("Este PIN no es de delivery");
+        return;
+    }
+
+    empresaId = usr.empresa_id;
+    empresaData = usr.empresas;
+    usuarioData = usr;
+
+    document.getElementById("empresaNombre").textContent = "Delivery";
+    document.getElementById("restInfo").textContent = empresaData?.nombre || "";
+    document.getElementById("loginSection").style.display = "none";
+    document.getElementById("deliverySection").style.display = "block";
+    startDelivery();
+}
+
+function showError(msg) {
+    document.getElementById("loginError").textContent = msg;
+    document.getElementById("loginError").style.display = "block";
+}
+
+function logout() {
+    sb.auth.signOut();
+    localStorage.removeItem("delivery_empresa");
+    location.reload();
+}
+
+async function startDelivery() {
+    if (navigator.geolocation) {
+        navigator.geolocation.watchPosition(pos => {
+            myLat = pos.coords.latitude;
+            myLon = pos.coords.longitude;
+        }, () => {}, { enableHighAccuracy: true });
+    }
+
+    loadPedidos();
+    setInterval(loadPedidos, 10000);
+}
+
+async function loadPedidos() {
+    if (!empresaId) return;
+    const { data: pedidos } = await sb.from("pedidos").select("*").eq("empresa_id", empresaId)
+        .in("estado", ["listo", "en_camino"])
+        .order("created_at", { ascending: true });
+
+    const container = document.getElementById("pedidosContainer");
+    const pedidosList = pedidos || [];
+    document.getElementById("pedidoCount").textContent = pedidosList.length + " pedidos";
+
+    if (pedidosList.length === 0) {
+        container.innerHTML = '<div class="empty">Sin pedidos para entregar</div>';
+        return;
+    }
+
+    container.innerHTML = pedidosList.map(p => {
+        const esDelivery = p.tipo_entrega === "Delivery";
+        const destino = p.direccion_entrega || "";
+        const dirCoords = p.dest_lat && p.dest_lon ? `https://www.google.com/maps?q=${p.dest_lat},${p.dest_lon}` : "";
+        const fecha = new Date(p.created_at).toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" });
+
+        let items = [];
+        try { items = typeof p.items === "string" ? JSON.parse(p.items) : (p.items || []); } catch(e) {}
+        const itemsHtml = items.map(i => `${i.cantidad || 1}x ${i.nombre || i}`).join(", ");
+
+        return `<div class="pedido-card">
+            <div class="pedido-header">
+                <span class="pedido-id">#${p.id.substring(0,8).toUpperCase()}</span>
+                <span class="pedido-estado ${p.estado === 'listo' ? 'estado-listo' : 'estado-en_camino'}">${p.estado.toUpperCase()}</span>
+            </div>
+            <div class="pedido-info">
+                ${p.cliente_nombre || "Cliente"} | ${p.tipo_entrega || "Retiro"} | ${fecha}<br>
+                ${itemsHtml}
+            </div>
+            ${destino ? `<div class="pedido-direccion">
+                📍 ${destino}
+                ${dirCoords ? `<a href="${dirCoords}" target="_blank" style="color:#58a6ff;font-size:12px;margin-left:8px">Abrir mapa</a>` : ""}
+            </div>` : ""}
+            <div class="pedido-actions">
+                ${p.estado === "listo" ? `<button class="btn btn-navegar" onclick="tomarPedido('${p.id}')">Tomar</button>` : ""}
+                ${p.estado === "en_camino" ? `
+                    <button class="btn btn-map" onclick="abrirMapa('${p.dest_lat}','${p.dest_lon}')">Mapa</button>
+                    <button class="btn btn-entregar" onclick="entregarPedido('${p.id}')">Entregado</button>
+                ` : ""}
+            </div>
+        </div>`;
+    }).join("");
+}
+
+async function tomarPedido(id) {
+    await sb.from("pedidos").update({ estado: "en_camino" }).eq("id", id);
+    loadPedidos();
+}
+
+async function entregarPedido(id) {
+    await sb.from("pedidos").update({ estado: "entregado" }).eq("id", id);
+    loadPedidos();
+}
+
+function abrirMapa(lat, lon) {
+    if (lat && lon) {
+        window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`, "_blank");
+    }
+}
+</script>
+</body>
+</html>
