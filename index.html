@@ -433,7 +433,8 @@ async function loadMesas() {
     const estados = { disponible: "estado-disponible", ocupada: "estado-ocupada", reservada: "estado-reservada" };
 
     html += mesas.map(m => {
-        const qrUrl = m.mesa_token ? `${window.location.origin}/mesa.html?mesa=${m.mesa_token}&empresa=${empresaId}` : "";
+        const panelBase = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+        const qrUrl = m.mesa_token ? `${panelBase}mesa.html?mesa=${m.mesa_token}&empresa=${empresaId}` : "";
         return `<div class="mesa-card">
         <div class="mesa-info">
             <span class="mesa-num">#${m.numero}</span>
