@@ -99,21 +99,21 @@
     </div>
 </div>
 
-<div class="estado-pedido" id="ratingModal" style="display:none">
-    <div style="font-size:48px;margin-bottom:16px">⭐</div>
-    <h2>Como estuvo tu experiencia?</h2>
-    <p style="margin-bottom:20px">Tu opinion nos ayuda a mejorar</p>
-    <div id="starContainer" style="display:flex;gap:8px;margin-bottom:20px;justify-content:center">
-        <span class="star-btn" onclick="setRating(1)" style="font-size:40px;cursor:pointer;opacity:0.3;transition:opacity 0.2s">★</span>
-        <span class="star-btn" onclick="setRating(2)" style="font-size:40px;cursor:pointer;opacity:0.3;transition:opacity 0.2s">★</span>
-        <span class="star-btn" onclick="setRating(3)" style="font-size:40px;cursor:pointer;opacity:0.3;transition:opacity 0.2s">★</span>
-        <span class="star-btn" onclick="setRating(4)" style="font-size:40px;cursor:pointer;opacity:0.3;transition:opacity 0.2s">★</span>
-        <span class="star-btn" onclick="setRating(5)" style="font-size:40px;cursor:pointer;opacity:0.3;transition:opacity 0.2s">★</span>
+<div class="estado-pedido" id="ratingModal" style="display:none;overflow-y:auto">
+    <div style="font-size:48px;margin-bottom:8px">⭐</div>
+    <h2 style="margin-bottom:4px">Califica tu experiencia</h2>
+    <p style="color:var(--text2);margin-bottom:16px;font-size:13px">Toca las estrellas de cada categoria</p>
+    
+    <div id="ratingCategories" style="width:100%;max-width:320px;margin-bottom:20px"></div>
+    
+    <div style="margin-bottom:16px">
+        <div style="font-size:28px;font-weight:bold;color:var(--accent)" id="ratingAvg">0.0</div>
+        <div style="font-size:12px;color:var(--text2)">Promedio general</div>
     </div>
-    <p id="ratingLabel" style="color:var(--text2);margin-bottom:16px">Toca una estrella</p>
+
     <div style="display:flex;gap:12px">
         <button class="volver" onclick="closeRating()">Ahora no</button>
-        <button class="volver" id="btnSendRating" onclick="sendRating()" style="background:var(--accent2);color:white;display:none">Enviar</button>
+        <button class="volver" onclick="sendRating()" style="background:var(--accent2);color:white">Enviar</button>
     </div>
 </div>
 
@@ -456,24 +456,50 @@ function volverCarta() {
     renderProductos(document.querySelector(".cat-btn.active")?.textContent === "Todos" ? null : document.querySelector(".cat-btn.active")?.textContent);
 }
 
-let currentRating = 0;
+const RATING_CATS = [
+    { id: "servicio", label: "Servicio", icon: "👋" },
+    { id: "comida", label: "Comida", icon: "🍽️" },
+    { id: "rapidez", label: "Rapidez", icon: "⚡" },
+    { id: "ambiente", label: "Ambiente", icon: "🎵" },
+    { id: "precio", label: "Precio", icon: "💰" }
+];
 
-function setRating(n) {
-    currentRating = n;
-    const labels = ["", "Malo", "Regular", "Bien", "Muy bueno", "Excelente"];
-    document.getElementById("ratingLabel").textContent = labels[n];
-    document.getElementById("btnSendRating").style.display = "";
-    const stars = document.querySelectorAll(".star-btn");
-    stars.forEach((s, i) => { s.style.opacity = i < n ? "1" : "0.3"; s.style.color = i < n ? "#f5a623" : "inherit"; });
+let ratings = {};
+
+function setStar(catId, n) {
+    ratings[catId] = n;
+    const stars = document.querySelectorAll(`.star-${catId}`);
+    stars.forEach((s, i) => {
+        s.style.opacity = i < n ? "1" : "0.25";
+        s.style.color = i < n ? "#f5a623" : "inherit";
+    });
+    updateAvg();
+}
+
+function updateAvg() {
+    const vals = RATING_CATS.map(c => ratings[c.id] || 0).filter(v => v > 0);
+    if (vals.length === 0) {
+        document.getElementById("ratingAvg").textContent = "0.0";
+        return;
+    }
+    const avg = (vals.reduce((s, v) => s + v, 0) / vals.length).toFixed(1);
+    document.getElementById("ratingAvg").textContent = avg + " / 5.0";
 }
 
 function showRating() {
     document.getElementById("estadoPedido").classList.remove("show");
     document.getElementById("ratingModal").style.display = "flex";
-    currentRating = 0;
-    document.getElementById("ratingLabel").textContent = "Toca una estrella";
-    document.getElementById("btnSendRating").style.display = "none";
-    document.querySelectorAll(".star-btn").forEach(s => { s.style.opacity = "0.3"; s.style.color = "inherit"; });
+    ratings = {};
+    const container = document.getElementById("ratingCategories");
+    container.innerHTML = RATING_CATS.map(c => `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+            <span style="font-size:14px;color:var(--text)">${c.icon} ${c.label}</span>
+            <div style="display:flex;gap:4px">
+                ${[1,2,3,4,5].map(n => `<span class="star-${c.id}" onclick="setStar('${c.id}',${n})" style="font-size:28px;cursor:pointer;opacity:0.25;transition:all 0.15s">★</span>`).join("")}
+            </div>
+        </div>
+    `).join("");
+    document.getElementById("ratingAvg").textContent = "0.0 / 5.0";
 }
 
 function closeRating() {
@@ -482,13 +508,21 @@ function closeRating() {
 }
 
 async function sendRating() {
-    if (currentRating === 0) return;
+    const vals = RATING_CATS.map(c => ratings[c.id] || 0);
+    if (vals.every(v => v === 0)) { alert("Toca al menos una estrella"); return; }
+    const avg = vals.filter(v => v > 0).reduce((s, v) => s + v, 0) / vals.filter(v => v > 0).length;
     try {
         await sb.from("calificaciones").insert({
             empresa_id: empresaId,
             mesa_token: mesaToken,
             cliente_token: clienteToken,
-            estrellas: currentRating
+            estrellas: Math.round(avg),
+            servicio: ratings.servicio || null,
+            comida: ratings.comida || null,
+            rapidez: ratings.rapidez || null,
+            ambiente: ratings.ambiente || null,
+            precio: ratings.precio || null,
+            comentario: JSON.stringify(ratings)
         });
         document.getElementById("ratingModal").style.display = "none";
         alert("Gracias por tu calificacion!");
