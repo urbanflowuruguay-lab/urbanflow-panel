@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Carta - UrbanFlow</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg: #0d1117; --bg2: #161b22; --bg3: #21262d;
@@ -35,14 +35,12 @@
         .qty-num { font-size: 16px; font-weight: bold; min-width: 20px; text-align: center; }
         .add-btn { background: var(--accent2); color: white; border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; font-size: 13px; font-weight: 600; font-family: var(--font); }
         .add-btn:active { opacity: 0.8; }
-
         .carrito-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg2); border-top: 1px solid var(--border); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; z-index: 20; }
         .carrito-bar .items-count { color: var(--text2); font-size: 14px; }
         .carrito-bar .total { font-weight: bold; color: var(--price); font-size: 18px; }
         .carrito-btn { background: var(--success); color: white; border: none; border-radius: 8px; padding: 12px 24px; font-size: 16px; font-weight: 600; cursor: pointer; font-family: var(--font); }
         .carrito-btn:disabled { background: var(--bg3); color: var(--muted); cursor: not-allowed; }
         .carrito-btn:active:not(:disabled) { opacity: 0.8; }
-
         .carrito-panel { display: none; position: fixed; bottom: 60px; left: 0; right: 0; background: var(--bg2); border-top: 1px solid var(--border); padding: 16px; max-height: 50vh; overflow-y: auto; z-index: 19; }
         .carrito-panel.show { display: block; }
         .carrito-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--bg3); }
@@ -50,7 +48,6 @@
         .carrito-item .nombre { font-size: 14px; }
         .carrito-item .precio { color: var(--price); font-weight: 600; }
         .carrito-item .remove { color: var(--danger); cursor: pointer; font-size: 18px; padding: 0 4px; }
-
         .nombre-input { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 200; align-items: center; justify-content: center; }
         .nombre-input.show { display: flex; }
         .nombre-box { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 24px; width: 90%; max-width: 350px; }
@@ -58,38 +55,152 @@
         .nombre-box input { width: 100%; padding: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 16px; margin-bottom: 12px; font-family: var(--font); }
         .nombre-box .btn-row { display: flex; gap: 8px; }
         .nombre-box .btn-row button { flex: 1; padding: 10px; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: var(--font); }
-
         .estado-pedido { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg); z-index: 300; align-items: center; justify-content: center; flex-direction: column; text-align: center; padding: 24px; }
         .estado-pedido.show { display: flex; }
         .estado-pedido .icon { font-size: 64px; margin-bottom: 16px; }
         .estado-pedido h2 { color: var(--accent); margin-bottom: 8px; }
         .estado-pedido p { color: var(--text2); font-size: 14px; line-height: 1.6; }
         .estado-pedido .volver { margin-top: 24px; background: var(--bg3); color: var(--text); border: none; border-radius: 8px; padding: 10px 24px; cursor: pointer; font-size: 14px; font-family: var(--font); }
-
         .empty { text-align: center; padding: 40px 20px; color: var(--muted); }
         .precio-original { text-decoration: line-through; color: var(--muted); font-size: 12px; margin-right: 4px; }
 
-        /* PORTADA — SIN imagen de fondo, solo tema */
-        .portada { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 500; overflow: hidden; }
-        .portada.show { display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .portada-content { position: relative; z-index: 2; text-align: center; padding: 32px; width: 100%; }
-        .portada-logo { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; margin-bottom: 24px; border: 3px solid rgba(255,255,255,0.15); box-shadow: 0 4px 24px rgba(0,0,0,0.3); }
-        .portada-nombre { font-size: 28px; font-weight: 700; margin-bottom: 10px; line-height: 1.2; }
-        .portada-mesa { font-size: 14px; margin-bottom: 36px; opacity: 0.7; letter-spacing: 1px; }
-        .portada-btn { padding: 16px 56px; border: 2px solid; border-radius: 30px; background: rgba(255,255,255,0.1); backdrop-filter: blur(8px); font-size: 18px; font-weight: 600; cursor: pointer; transition: all 0.3s; letter-spacing: 2px; font-family: inherit; }
-        .portada-btn:active { transform: scale(0.96); filter: brightness(1.2); }
-        .portada-footer { position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; font-size: 11px; opacity: 0.3; z-index: 2; }
+        /* ===== PORTADA ARTISTICA ===== */
+        .portada {
+            display: none; position: fixed; inset: 0; z-index: 500;
+            flex-direction: column; align-items: center; justify-content: center;
+            overflow: hidden;
+        }
+        .portada.show { display: flex; }
+
+        .portada-fondo {
+            position: absolute; inset: 0;
+        }
+
+        .portada-decor-top, .portada-decor-bottom {
+            position: absolute; left: 50%; transform: translateX(-50%);
+            width: 120px; height: 1px; opacity: 0.4;
+        }
+        .portada-decor-top { top: 15%; }
+        .portada-decor-bottom { bottom: 18%; }
+
+        .portada-content {
+            position: relative; z-index: 2;
+            display: flex; flex-direction: column; align-items: center;
+            padding: 32px; width: 100%;
+        }
+
+        .portada-logo-wrap {
+            position: relative; margin-bottom: 28px;
+        }
+        .portada-logo-ring {
+            position: absolute; inset: -6px;
+            border-radius: 50%; border: 1px solid;
+            opacity: 0.3;
+        }
+        .portada-logo {
+            width: 100px; height: 100px;
+            border-radius: 50%; object-fit: cover;
+            display: block;
+        }
+        .portada-logo-placeholder {
+            width: 100px; height: 100px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 36px; font-weight: 700;
+        }
+
+        .portada-diamond {
+            width: 8px; height: 8px;
+            transform: rotate(45deg);
+            margin-bottom: 20px; opacity: 0.5;
+        }
+
+        .portada-nombre {
+            font-size: 26px; font-weight: 300;
+            letter-spacing: 4px; text-transform: uppercase;
+            margin-bottom: 6px; text-align: center;
+            line-height: 1.3;
+        }
+
+        .portada-subline {
+            font-size: 11px; letter-spacing: 6px;
+            text-transform: uppercase; opacity: 0.4;
+            margin-bottom: 40px;
+        }
+
+        .portada-mesa {
+            font-size: 13px; letter-spacing: 3px;
+            text-transform: uppercase; opacity: 0.5;
+            margin-bottom: 40px;
+        }
+
+        .portada-btn {
+            position: relative; padding: 14px 52px;
+            border: 1px solid; border-radius: 0;
+            background: transparent; font-size: 13px;
+            font-weight: 500; cursor: pointer;
+            letter-spacing: 4px; text-transform: uppercase;
+            transition: all 0.4s ease;
+            font-family: inherit;
+        }
+        .portada-btn::before, .portada-btn::after {
+            content: ''; position: absolute;
+            width: 12px; height: 12px; border: 1px solid;
+            opacity: 0.3; transition: all 0.4s ease;
+        }
+        .portada-btn::before { top: -6px; left: -6px; border-right: none; border-bottom: none; }
+        .portada-btn::after { bottom: -6px; right: -6px; border-left: none; border-top: none; }
+        .portada-btn:active { transform: scale(0.97); }
+
+        .portada-footer {
+            position: absolute; bottom: 16px; left: 0; right: 0;
+            text-align: center; font-size: 9px;
+            letter-spacing: 3px; text-transform: uppercase;
+            opacity: 0.2; z-index: 2;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes expandLine {
+            from { width: 0; }
+            to { width: 120px; }
+        }
+        .portada.show .portada-logo-wrap { animation: fadeIn 0.8s ease 0.2s both; }
+        .portada.show .portada-diamond { animation: fadeIn 0.6s ease 0.6s both; }
+        .portada.show .portada-nombre { animation: fadeInUp 0.8s ease 0.8s both; }
+        .portada.show .portada-subline { animation: fadeIn 0.6s ease 1.2s both; }
+        .portada.show .portada-mesa { animation: fadeIn 0.6s ease 1.4s both; }
+        .portada.show .portada-btn { animation: fadeInUp 0.8s ease 1.6s both; }
+        .portada.show .portada-decor-top { animation: expandLine 0.8s ease 0.4s both; }
+        .portada.show .portada-decor-bottom { animation: expandLine 0.8s ease 0.4s both; }
     </style>
 </head>
 <body>
 
 <div class="portada show" id="portada">
+    <div class="portada-fondo" id="portadaFondo"></div>
+    <div class="portada-decor-top" id="decorTop"></div>
+    <div class="portada-decor-bottom" id="decorBottom"></div>
+
     <div class="portada-content">
-        <img id="portadaLogo" class="portada-logo" src="" style="display:none">
+        <div class="portada-logo-wrap" id="logoWrap">
+            <div class="portada-logo-ring" id="logoRing"></div>
+            <img id="portadaLogo" class="portada-logo" src="" style="display:none">
+            <div id="portadaLogoPlaceholder" class="portada-logo-placeholder" style="display:none"></div>
+        </div>
+        <div class="portada-diamond" id="portadaDiamond"></div>
         <div class="portada-nombre" id="portadaNombre">Restaurante</div>
+        <div class="portada-subline" id="portadaSubline">Bienvenido</div>
         <div class="portada-mesa" id="portadaMesa">Mesa #-</div>
-        <button class="portada-btn" onclick="entrarCarta()">ENTRAR</button>
+        <button class="portada-btn" id="portadaBtn" onclick="entrarCarta()">Entrar</button>
     </div>
+
     <div class="portada-footer">Powered by UrbanFlow</div>
 </div>
 
@@ -149,12 +260,42 @@ let clienteToken = localStorage.getItem("cliente_token_" + mesaToken) || crypto.
 localStorage.setItem("cliente_token_" + mesaToken, clienteToken);
 
 const themes = {
-    dark_elegance: { bg: "#0a0a0a", bg2: "#141414", bg3: "#1e1e1e", border: "#2a2a2a", text: "#e8e8e8", text2: "#999", accent: "#d4af37", accent2: "#b8960c", price: "#d4af37", success: "#2d8a4e", danger: "#c0392b", muted: "#555", font: "'Inter', sans-serif", fontHeading: "'Playfair Display', serif", cardRadius: "12px", cardShadow: "0 4px 20px rgba(0,0,0,0.4)", portadaBg: "#0a0a0a", portadaText: "#d4af37", portadaMesa: "rgba(212,175,55,0.6)", portadaBtnBorder: "rgba(212,175,55,0.4)", portadaBtnColor: "#d4af37", portadaBtnBg: "rgba(212,175,55,0.08)" },
-    editorial: { bg: "#faf6ee", bg2: "#f0ebe0", bg3: "#e6dfd2", border: "#d4c9b5", text: "#1a1612", text2: "#6b5e4f", accent: "#6b1d1d", accent2: "#8b2500", price: "#6b1d1d", success: "#2d6a3f", danger: "#991b1b", muted: "#9a8b7a", font: "'Lora', serif", fontHeading: "'Playfair Display', serif", cardRadius: "8px", cardShadow: "0 2px 8px rgba(0,0,0,0.08)", portadaBg: "#1a0f0a", portadaText: "#faf6ee", portadaMesa: "rgba(250,246,238,0.6)", portadaBtnBorder: "rgba(250,246,238,0.4)", portadaBtnColor: "#faf6ee", portadaBtnBg: "rgba(250,246,238,0.08)" },
-    minimalista: { bg: "#ffffff", bg2: "#ffffff", bg3: "#f5f5f5", border: "#e5e5e5", text: "#171717", text2: "#737373", accent: "#000000", accent2: "#171717", price: "#171717", success: "#16a34a", danger: "#dc2626", muted: "#a3a3a3", font: "'Inter', sans-serif", fontHeading: "'Inter', sans-serif", cardRadius: "6px", cardShadow: "none", portadaBg: "#ffffff", portadaText: "#171717", portadaMesa: "rgba(23,23,23,0.5)", portadaBtnBorder: "rgba(23,23,23,0.3)", portadaBtnColor: "#171717", portadaBtnBg: "rgba(23,23,23,0.05)" },
-    bold_colorido: { bg: "#111111", bg2: "#1a1a2e", bg3: "#16213e", border: "#0f3460", text: "#f1faee", text2: "#a8dadc", accent: "#e63946", accent2: "#d62828", price: "#f77f00", success: "#2d6a4f", danger: "#e63946", muted: "#457b9d", font: "'Inter', sans-serif", fontHeading: "'Inter', sans-serif", cardRadius: "14px", cardShadow: "0 4px 24px rgba(230,57,70,0.15)", portadaBg: "#1d3557", portadaText: "#f1faee", portadaMesa: "rgba(241,250,238,0.6)", portadaBtnBorder: "rgba(230,57,70,0.5)", portadaBtnColor: "#f1faee", portadaBtnBg: "rgba(230,57,70,0.12)" },
-    glassmorphism: { bg: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)", bg2: "rgba(255,255,255,0.08)", bg3: "rgba(255,255,255,0.05)", border: "rgba(255,255,255,0.12)", text: "#e0e0ff", text2: "rgba(255,255,255,0.6)", accent: "#a78bfa", accent2: "#7c3aed", price: "#34d399", success: "#10b981", danger: "#f87171", muted: "rgba(255,255,255,0.3)", font: "'Inter', sans-serif", fontHeading: "'Inter', sans-serif", cardRadius: "16px", cardShadow: "0 8px 32px rgba(0,0,0,0.3)", portadaBg: "linear-gradient(135deg, #0f3460 0%, #1a1a2e 50%, #16213e 100%)", portadaText: "#e0e0ff", portadaMesa: "rgba(224,224,255,0.5)", portadaBtnBorder: "rgba(167,139,250,0.4)", portadaBtnColor: "#a78bfa", portadaBtnBg: "rgba(167,139,250,0.1)" },
-    rustico: { bg: "#f5f0e8", bg2: "#efe8db", bg3: "#e6ddd0", border: "#d4c5a9", text: "#3e2723", text2: "#6d4c41", accent: "#8b4513", accent2: "#a0522d", price: "#8b4513", success: "#556b2f", danger: "#b22222", muted: "#8d7b68", font: "'Lora', serif", fontHeading: "'Playfair Display', serif", cardRadius: "6px", cardShadow: "0 2px 12px rgba(62,39,35,0.1)", portadaBg: "#2c1a12", portadaText: "#f5f0e8", portadaMesa: "rgba(245,240,238,0.5)", portadaBtnBorder: "rgba(139,69,19,0.5)", portadaBtnColor: "#f5f0e8", portadaBtnBg: "rgba(139,69,19,0.12)" }
+    dark_elegance: {
+        bg: "#0a0a0a", bg2: "#141414", bg3: "#1e1e1e", border: "#2a2a2a", text: "#e8e8e8", text2: "#999", accent: "#d4af37", accent2: "#b8960c", price: "#d4af37", success: "#2d8a4e", danger: "#c0392b", muted: "#555", font: "'Inter', sans-serif", fontHeading: "'Cormorant Garamond', serif", cardRadius: "12px", cardShadow: "0 4px 20px rgba(0,0,0,0.4)",
+        portadaFondo: "radial-gradient(ellipse at center, #1a1a2e 0%, #0a0a0a 70%)",
+        portadaColor: "#d4af37", portadaOpacity: "rgba(212,175,55,",
+        portadaBtnBorder: "#d4af37", portadaRing: "#d4af37"
+    },
+    editorial: {
+        bg: "#faf6ee", bg2: "#f0ebe0", bg3: "#e6dfd2", border: "#d4c9b5", text: "#1a1612", text2: "#6b5e4f", accent: "#6b1d1d", accent2: "#8b2500", price: "#6b1d1d", success: "#2d6a3f", danger: "#991b1b", muted: "#9a8b7a", font: "'Lora', serif", fontHeading: "'Playfair Display', serif", cardRadius: "8px", cardShadow: "0 2px 8px rgba(0,0,0,0.08)",
+        portadaFondo: "linear-gradient(170deg, #1a0f0a 0%, #2c1810 40%, #1a0f0a 100%)",
+        portadaColor: "#faf6ee", portadaOpacity: "rgba(250,246,238,",
+        portadaBtnBorder: "#faf6ee", portadaRing: "#faf6ee"
+    },
+    minimalista: {
+        bg: "#ffffff", bg2: "#ffffff", bg3: "#f5f5f5", border: "#e5e5e5", text: "#171717", text2: "#737373", accent: "#000000", accent2: "#171717", price: "#171717", success: "#16a34a", danger: "#dc2626", muted: "#a3a3a3", font: "'Inter', sans-serif", fontHeading: "'Inter', sans-serif", cardRadius: "6px", cardShadow: "none",
+        portadaFondo: "linear-gradient(180deg, #ffffff 0%, #f8f8f8 100%)",
+        portadaColor: "#171717", portadaOpacity: "rgba(23,23,23,",
+        portadaBtnBorder: "#171717", portadaRing: "#171717"
+    },
+    bold_colorido: {
+        bg: "#111111", bg2: "#1a1a2e", bg3: "#16213e", border: "#0f3460", text: "#f1faee", text2: "#a8dadc", accent: "#e63946", accent2: "#d62828", price: "#f77f00", success: "#2d6a4f", danger: "#e63946", muted: "#457b9d", font: "'Inter', sans-serif", fontHeading: "'Inter', sans-serif", cardRadius: "14px", cardShadow: "0 4px 24px rgba(230,57,70,0.15)",
+        portadaFondo: "linear-gradient(135deg, #1d3557 0%, #457b9d 50%, #1d3557 100%)",
+        portadaColor: "#f1faee", portadaOpacity: "rgba(241,250,238,",
+        portadaBtnBorder: "#e63946", portadaRing: "#e63946"
+    },
+    glassmorphism: {
+        bg: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)", bg2: "rgba(255,255,255,0.08)", bg3: "rgba(255,255,255,0.05)", border: "rgba(255,255,255,0.12)", text: "#e0e0ff", text2: "rgba(255,255,255,0.6)", accent: "#a78bfa", accent2: "#7c3aed", price: "#34d399", success: "#10b981", danger: "#f87171", muted: "rgba(255,255,255,0.3)", font: "'Inter', sans-serif", fontHeading: "'Inter', sans-serif", cardRadius: "16px", cardShadow: "0 8px 32px rgba(0,0,0,0.3)",
+        portadaFondo: "radial-gradient(ellipse at 30% 20%, rgba(167,139,250,0.15) 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, rgba(124,58,237,0.1) 0%, transparent 50%), linear-gradient(135deg, #0f3460 0%, #1a1a2e 100%)",
+        portadaColor: "#e0e0ff", portadaOpacity: "rgba(224,224,255,",
+        portadaBtnBorder: "#a78bfa", portadaRing: "#a78bfa"
+    },
+    rustico: {
+        bg: "#f5f0e8", bg2: "#efe8db", bg3: "#e6ddd0", border: "#d4c5a9", text: "#3e2723", text2: "#6d4c41", accent: "#8b4513", accent2: "#a0522d", price: "#8b4513", success: "#556b2f", danger: "#b22222", muted: "#8d7b68", font: "'Lora', serif", fontHeading: "'Playfair Display', serif", cardRadius: "6px", cardShadow: "0 2px 12px rgba(62,39,35,0.1)",
+        portadaFondo: "linear-gradient(180deg, #3e2723 0%, #5d4037 50%, #2c1a12 100%)",
+        portadaColor: "#f5f0e8", portadaOpacity: "rgba(245,240,238,",
+        portadaBtnBorder: "#f5f0e8", portadaRing: "#f5f0e8"
+    }
 };
 
 function applyTheme(templateId) {
@@ -172,26 +313,45 @@ function applyTheme(templateId) {
 
 function applyPortadaTheme(templateId) {
     const t = themes[templateId] || themes.dark_elegance;
-    const portada = document.getElementById("portada");
-    const nombre = document.getElementById("portadaNombre");
-    const mesa = document.getElementById("portadaMesa");
-    const btn = document.querySelector(".portada-btn");
-    const logo = document.getElementById("portadaLogo");
 
-    portada.style.background = t.portadaBg;
-    nombre.style.color = t.portadaText;
+    document.getElementById("portada").style.background = "transparent";
+    document.getElementById("portadaFondo").style.background = t.portadaFondo;
+
+    const decor = [document.getElementById("decorTop"), document.getElementById("decorBottom")];
+    decor.forEach(d => { d.style.background = t.portadaColor; });
+
+    const nombre = document.getElementById("portadaNombre");
+    nombre.style.color = t.portadaColor;
     nombre.style.fontFamily = t.fontHeading;
-    mesa.style.color = t.portadaMesa;
-    mesa.style.fontFamily = t.font;
+
+    document.getElementById("portadaSubline").style.color = t.portadaColor;
+    document.getElementById("portadaMesa").style.color = t.portadaColor;
+
+    const diamond = document.getElementById("portadaDiamond");
+    diamond.style.background = t.portadaColor;
+
+    const btn = document.getElementById("portadaBtn");
     btn.style.borderColor = t.portadaBtnBorder;
-    btn.style.color = t.portadaBtnColor;
-    btn.style.background = t.portadaBtnBg;
-    btn.style.fontFamily = t.font;
-    if (logo) logo.style.borderColor = t.portadaBtnBorder;
+    btn.style.color = t.portadaColor;
+
+    const corners = btn.querySelectorAll("::before, ::after");
+
+    const ring = document.getElementById("logoRing");
+    ring.style.borderColor = t.portadaRing;
+
+    const placeholder = document.getElementById("portadaLogoPlaceholder");
+    if (placeholder.style.display !== "none") {
+        placeholder.style.background = t.portadaFondo;
+        placeholder.style.color = t.portadaColor;
+        placeholder.style.border = `2px solid ${t.portadaBtnBorder}`;
+    }
 }
 
 function entrarCarta() {
-    document.getElementById("portada").classList.remove("show");
+    const portada = document.getElementById("portada");
+    portada.style.transition = "opacity 0.5s ease";
+    portada.style.opacity = "0";
+    setTimeout(() => { portada.classList.remove("show"); portada.style.opacity = ""; portada.style.transition = ""; }, 500);
 }
 
 async function init() {
@@ -214,13 +374,23 @@ async function init() {
         }
         const tpl = empresaData.carta_template || "dark_elegance";
         applyTheme(tpl);
+
         document.getElementById("portadaNombre").textContent = empresaData.nombre;
-        document.getElementById("portadaMesa").textContent = `Mesa #${mesaData.numero}`;
+        document.getElementById("portadaMesa").textContent = `Mesa ${mesaData.numero}`;
+
         if (empresaData.logo_url) {
             const logo = document.getElementById("portadaLogo");
             logo.src = empresaData.logo_url;
             logo.style.display = "block";
+            document.getElementById("portadaLogoPlaceholder").style.display = "none";
+        } else {
+            const initials = empresaData.nombre.split(" ").map(w => w[0]).join("").substring(0, 2).toUpperCase();
+            const placeholder = document.getElementById("portadaLogoPlaceholder");
+            placeholder.textContent = initials;
+            placeholder.style.display = "flex";
+            document.getElementById("portadaLogo").style.display = "none";
         }
+
         applyPortadaTheme(tpl);
         sb.from("mesas").update({ estado: "ocupada" }).eq("id", mesaData.id).then(() => {});
         renderProductos();
