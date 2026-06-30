@@ -473,6 +473,8 @@ function setStar(catId, n) {
         s.style.opacity = i < n ? "1" : "0.25";
         s.style.color = i < n ? "#f5a623" : "inherit";
     });
+    const commentInput = document.getElementById(`comment-${catId}`);
+    if (commentInput) commentInput.style.display = n > 0 ? "block" : "none";
     updateAvg();
 }
 
@@ -492,11 +494,14 @@ function showRating() {
     ratings = {};
     const container = document.getElementById("ratingCategories");
     container.innerHTML = RATING_CATS.map(c => `
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
-            <span style="font-size:14px;color:var(--text)">${c.icon} ${c.label}</span>
-            <div style="display:flex;gap:4px">
-                ${[1,2,3,4,5].map(n => `<span class="star-${c.id}" onclick="setStar('${c.id}',${n})" style="font-size:28px;cursor:pointer;opacity:0.25;transition:all 0.15s">★</span>`).join("")}
+        <div style="padding:10px 0;border-bottom:1px solid var(--border)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+                <span style="font-size:14px;color:var(--text)">${c.icon} ${c.label}</span>
+                <div style="display:flex;gap:4px">
+                    ${[1,2,3,4,5].map(n => `<span class="star-${c.id}" onclick="setStar('${c.id}',${n})" style="font-size:26px;cursor:pointer;opacity:0.25;transition:all 0.15s">★</span>`).join("")}
+                </div>
             </div>
+            <input type="text" id="comment-${c.id}" placeholder="Comentario opcional..." style="width:100%;background:transparent;border:1px solid var(--border);border-radius:4px;padding:6px 8px;color:var(--text);font-size:12px;font-family:var(--font);display:none">
         </div>
     `).join("");
     document.getElementById("ratingAvg").textContent = "0.0 / 5.0";
@@ -512,6 +517,11 @@ async function sendRating() {
     if (vals.every(v => v === 0)) { alert("Toca al menos una estrella"); return; }
     const avg = vals.filter(v => v > 0).reduce((s, v) => s + v, 0) / vals.filter(v => v > 0).length;
     try {
+        const comments = {};
+        RATING_CATS.forEach(c => {
+            const input = document.getElementById(`comment-${c.id}`);
+            if (input && input.value.trim()) comments[c.id] = input.value.trim();
+        });
         await sb.from("calificaciones").insert({
             empresa_id: empresaId,
             mesa_token: mesaToken,
@@ -522,7 +532,7 @@ async function sendRating() {
             rapidez: ratings.rapidez || null,
             ambiente: ratings.ambiente || null,
             precio: ratings.precio || null,
-            comentario: JSON.stringify(ratings)
+            comentario: Object.keys(comments).length > 0 ? JSON.stringify(comments) : null
         });
         document.getElementById("ratingModal").style.display = "none";
         alert("Gracias por tu calificacion!");
