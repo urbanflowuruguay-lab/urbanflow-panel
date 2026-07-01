@@ -495,35 +495,63 @@ async function enviarPedido() {
     btn.disabled = true;
     btn.textContent = "Enviando...";
 
+    const pedido = {
+        empresa_id: empresaId,
+        mesa_token: mesaToken,
+        cliente_nombre: "Cliente Mesa " + mesaData.numero,
+        cliente_token: clienteToken,
+        items: JSON.stringify(items),
+        total: total,
+        estado: "recibido",
+        tipo_entrega: "Mesa",
+        notas: `Mesa #${mesaData.numero}`
+    };
+
+    let error = null;
+
+    // Try SDK first
     try {
-        const { data, error } = await sb.from("pedidos").insert({
-            empresa_id: empresaId,
-            mesa_token: mesaToken,
-            cliente_nombre: "Cliente Mesa " + mesaData.numero,
-            cliente_token: clienteToken,
-            items: JSON.stringify(items),
-            total: total,
-            estado: "recibido",
-            tipo_entrega: "Mesa",
-            notas: `Mesa #${mesaData.numero}`
-        });
-        if (error) {
-            console.error("Error insertando pedido:", error);
-            alert("Error: " + error.message);
+        const res = await sb.from("pedidos").insert(pedido);
+        error = res.error;
+    } catch(e) { error = e; }
+
+    // Fallback: raw HTTP
+    if (error) {
+        console.warn("SDK failed, trying HTTP:", error);
+        try {
+            const resp = await fetch(SUPABASE_URL + "/rest/v1/pedidos", {
+                method: "POST",
+                headers: {
+                    "apikey": SUPABASE_ANON,
+                    "Authorization": "Bearer " + SUPABASE_ANON,
+                    "Content-Type": "application/json",
+                    "Prefer": "return=representation"
+                },
+                body: JSON.stringify(pedido)
+            });
+            if (!resp.ok) {
+                const body = await resp.text();
+                console.error("HTTP error:", resp.status, body);
+                alert("Error: " + resp.status + " - " + body);
+                btn.disabled = false;
+                btn.textContent = "Pedir";
+                return;
+            }
+            console.log("Pedido guardado via HTTP:", await resp.json());
+        } catch(e) {
+            console.error("HTTP exception:", e);
+            alert("Error de conexion: " + e.message);
             btn.disabled = false;
             btn.textContent = "Pedir";
             return;
         }
-        console.log("Pedido guardado:", data);
-        carrito = [];
-        updateCarritoBar();
-        document.getElementById("estadoPedido").classList.add("show");
-    } catch (e) {
-        console.error("Excepcion enviarPedido:", e);
-        alert("Error: " + e.message);
-        btn.disabled = false;
-        btn.textContent = "Pedir";
+    } else {
+        console.log("Pedido guardado:", res.data);
     }
+
+    carrito = [];
+    updateCarritoBar();
+    document.getElementById("estadoPedido").classList.add("show");
 }
 
 function volverCarta() {
