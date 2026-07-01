@@ -138,6 +138,7 @@
         <div class="tab" id="tab_reservas" onclick="switchTab('reservas')" style="display:none">Reservas <span class="badge" id="badge_reservas" style="display:none">0</span></div>
         <div class="tab" id="tab_mesas" onclick="switchTab('mesas')" style="display:none">Mesas</div>
         <div class="tab" id="tab_productos" onclick="switchTab('productos')">Carta</div>
+        <div class="tab" id="tab_categorias" onclick="switchTab('categorias')">Categorias</div>
         <div class="tab" id="tab_catalogo" onclick="switchTab('catalogo')">Catalogo</div>
         <div class="tab" id="tab_usuarios" onclick="switchTab('usuarios')">Usuarios</div>
         <div class="tab" id="tab_perfil" onclick="switchTab('perfil')">Perfil</div>
@@ -236,6 +237,7 @@ function switchTab(tab) {
     else if (tab === "reservas") loadReservas();
     else if (tab === "mesas") loadMesas();
     else if (tab === "productos") loadProductos();
+    else if (tab === "categorias") loadCategorias();
     else if (tab === "catalogo") loadCatalogo();
     else if (tab === "usuarios") loadUsuarios();
     else if (tab === "perfil") loadPerfil();
@@ -580,7 +582,11 @@ async function deleteMesa(id, numero) {
 }
 
 async function loadProductos() {
-    const { data: productos } = await sb.from("productos_empresa").select("*").eq("empresa_id", empresaId).order("created_at", { ascending: false });
+    const [{ data: productos }, { data: cats }] = await Promise.all([
+        sb.from("productos_empresa").select("*").eq("empresa_id", empresaId).order("created_at", { ascending: false }),
+        sb.from("categorias_empresa").select("*").eq("empresa_id", empresaId).order("orden")
+    ]);
+    categoriasEmpresa = cats || [];
     const content = document.getElementById("content");
     const isComida = empresaData?.rubro_tipo === "comida";
 
@@ -597,36 +603,13 @@ async function loadProductos() {
         </div>
         <div class="form-row">
             <div class="form-group"><label>Stock</label><input type="number" id="prodStock" value="0"></div>
-            <div class="form-group"><label>Categoria</label>
-                <select id="prodCategoria" style="width:100%;padding:8px 12px;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;font-size:14px">
-                    <option value="">Seleccionar categoria...</option>
-                    <option value="Menu">Menu</option>
-                    <option value="Recomendados">Recomendados</option>
-                    <option value="Promociones">Promociones</option>
-                    <option value="Frankfurters y Hungaras">Frankfurters y Hungaras</option>
-                    <option value="Chivitos">Chivitos</option>
-                    <option value="Sandwiches frios">Sandwiches frios</option>
-                    <option value="Sandwiches calientes">Sandwiches calientes</option>
-                    <option value="Pizzetas">Pizzetas</option>
-                    <option value="Entradas">Entradas</option>
-                    <option value="Carnes">Carnes</option>
-                    <option value="Pescados">Pescados</option>
-                    <option value="Pollos">Pollos</option>
-                    <option value="Pastas artesanales">Pastas artesanales</option>
-                    <option value="Ensaladas especiales">Ensaladas especiales</option>
-                    <option value="Ensaladas">Ensaladas</option>
-                    <option value="Milanesas">Milanesas</option>
-                    <option value="Hamburguesas">Hamburguesas</option>
-                    <option value="Omelettes">Omelettes</option>
-                    <option value="Pizzeria">Pizzeria</option>
-                    <option value="Postres">Postres</option>
-                    <option value="Bebidas">Bebidas</option>
-                </select>
-                <input type="text" id="prodCategoriaCustom" placeholder="O escribi una categoria nueva..." style="width:100%;padding:8px 12px;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;font-size:13px;margin-top:6px">
-            </div>
+            <div class="form-group"><label>Sub-categoria</label><input type="text" id="prodSubCategoria" placeholder="Ej: Napolitana, Especial..."></div>
+        </div>
+        <div class="form-group"><label>Categorias (selecciona varias)</label>
+            <div id="prodCatsChecks" style="display:flex;flex-wrap:wrap;gap:6px 14px;padding:8px 0"></div>
+            <input type="text" id="prodCategoriaCustom" placeholder="Nueva categoria..." style="width:100%;padding:8px 12px;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;font-size:13px;margin-top:6px">
         </div>
         <div class="form-group"><label>Descripcion</label><textarea id="prodDescripcion"></textarea></div>
-        <div class="form-group"><label>Sub-categoria (ej: Napolitana, Especial, Fugazzeta...)</label><input type="text" id="prodSubCategoria" placeholder="Opcional: tipo de producto dentro de la categoria"></div>
         <div class="form-group"><label>Foto (subir archivo)</label>
             <input type="file" id="prodFotoFile" accept="image/*" style="padding:8px;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;width:100%">
             <img id="prodFotoPreview" style="max-width:120px;max-height:80px;border-radius:6px;margin-top:8px;display:none;object-fit:cover">
@@ -643,6 +626,17 @@ async function loadProductos() {
     </table>`;
 
     content.innerHTML = html;
+
+    const checksDiv = document.getElementById("prodCatsChecks");
+    if (checksDiv) {
+        checksDiv.innerHTML = categoriasEmpresa.map(c =>
+            `<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:13px;color:#c9d1d9">
+                <input type="checkbox" name="prodCat" value="${c.nombre}" style="accent-color:#58a6ff"> ${c.icono||'📌'} ${c.nombre}
+            </label>`
+        ).join("") + `<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:13px;color:#58a6ff;font-weight:bold">
+            <input type="checkbox" name="prodCat" value="__new__" style="accent-color:#58a6ff"> + Nueva
+        </label>`;
+    }
 
     document.getElementById("prodFotoFile").addEventListener("change", async function() {
         const file = this.files[0];
@@ -664,18 +658,22 @@ async function loadProductos() {
         return;
     }
 
-    tbody.innerHTML = productos.map(p => `<tr>
+    tbody.innerHTML = productos.map(p => {
+        let cats = p.categorias || p.categoria || [];
+        if (typeof cats === 'string') try { cats = JSON.parse(cats); } catch { cats = [cats]; }
+        const catsLabel = Array.isArray(cats) ? cats.join(', ') : cats;
+        return `<tr>
         <td>${p.foto_url ? `<img src="${p.foto_url}" class="producto-img">` : '<div class="producto-img" style="display:flex;align-items:center;justify-content:center;color:#484f58">?</div>'}</td>
-        <td><strong>${p.nombre}</strong><br><small style="color:#8b949e">${p.categoria || ''}</small></td>
+        <td><strong>${p.nombre}</strong><br><small style="color:#8b949e">${catsLabel}</small></td>
         <td>${p.sub_categoria || '<span style="color:#484f58">—</span>'}</td>
         <td>$${(p.precio || 0).toFixed(0)}</td>
         <td>${p.stock}</td>
         <td><button class="toggle-activo ${p.activo ? 'on' : 'off'}" onclick="toggleProducto('${p.id}',${p.activo})"></button></td>
         <td class="actions">
-            <button class="btn btn-secondary btn-sm" onclick="editProducto('${p.id}','${(p.nombre||'').replace(/'/g,"\\'")}','${p.precio||0}','${p.stock||0}','${(p.descripcion||'').replace(/'/g,"\\'")}','${(p.categoria||'').replace(/'/g,"\\'")}','${p.foto_url||''}','${(p.sub_categoria||'').replace(/'/g,"\\'")}')">Editar</button>
+            <button class="btn btn-secondary btn-sm" onclick="editProducto('${p.id}','${(p.nombre||'').replace(/'/g,"\\'")}','${p.precio||0}','${p.stock||0}','${(p.descripcion||'').replace(/'/g,"\\'")}','${JSON.stringify(cats).replace(/'/g,"\\'").replace(/"/g,"&quot;")}','${p.foto_url||''}','${(p.sub_categoria||'').replace(/'/g,"\\'")}')">Editar</button>
             <button class="btn btn-danger btn-sm" onclick="deleteProducto('${p.id}','${(p.nombre||'').replace(/'/g,"\\'")}')">Borrar</button>
         </td>
-    </tr>`).join("");
+    </tr>`}).join("");
 }
 
 function showAddProducto() {
@@ -685,7 +683,7 @@ function showAddProducto() {
     document.getElementById("prodNombre").value = "";
     document.getElementById("prodPrecio").value = "";
     document.getElementById("prodStock").value = "0";
-    document.getElementById("prodCategoria").selectedIndex = 0;
+    document.querySelectorAll('input[name="prodCat"]').forEach(cb => cb.checked = false);
     document.getElementById("prodCategoriaCustom").value = "";
     document.getElementById("prodSubCategoria").value = "";
     document.getElementById("prodDescripcion").value = "";
@@ -701,16 +699,6 @@ function editProducto(id, nombre, precio, stock, desc, cat, foto, subCat) {
     document.getElementById("prodNombre").value = nombre;
     document.getElementById("prodPrecio").value = precio;
     document.getElementById("prodStock").value = stock;
-    const sel = document.getElementById("prodCategoria");
-    const customInput = document.getElementById("prodCategoriaCustom");
-    const matchOption = Array.from(sel.options).find(o => o.value === cat);
-    if (matchOption) {
-        sel.value = cat;
-        customInput.value = "";
-    } else {
-        sel.value = "";
-        customInput.value = cat || "";
-    }
     document.getElementById("prodSubCategoria").value = subCat || "";
     document.getElementById("prodDescripcion").value = desc;
     document.getElementById("prodFoto").value = foto;
@@ -720,22 +708,36 @@ function editProducto(id, nombre, precio, stock, desc, cat, foto, subCat) {
     } else {
         document.getElementById("prodFotoPreview").style.display = "none";
     }
+    let catsArr = [];
+    try { catsArr = JSON.parse(cat); } catch { catsArr = cat ? [cat] : []; }
+    document.querySelectorAll('input[name="prodCat"]').forEach(cb => {
+        cb.checked = catsArr.includes(cb.value) || (cb.value === "__new__" && !catsArr.some(c => categoriasEmpresa.find(ce => ce.nombre === c)));
+    });
+    document.getElementById("prodCategoriaCustom").value = "";
 }
 
 function cancelProducto() { document.getElementById("formProducto").style.display = "none"; }
 
+function getSelectedCats() {
+    const cats = [];
+    document.querySelectorAll('input[name="prodCat"]:checked').forEach(cb => {
+        if (cb.value !== "__new__") cats.push(cb.value);
+    });
+    const custom = document.getElementById("prodCategoriaCustom").value.trim();
+    if (custom) cats.push(custom);
+    return cats;
+}
+
 async function saveProducto() {
     const id = document.getElementById("prodId").value;
-    const selCat = document.getElementById("prodCategoria").value.trim();
-    const customCat = document.getElementById("prodCategoriaCustom").value.trim();
-    const categoria = customCat || selCat;
-    if (!categoria) { alert("Selecciona o escribe una categoria"); return; }
+    const cats = getSelectedCats();
+    if (cats.length === 0) { alert("Selecciona o escribe una categoria"); return; }
     const data = {
         empresa_id: empresaId,
         nombre: document.getElementById("prodNombre").value.trim(),
         precio: parseFloat(document.getElementById("prodPrecio").value) || 0,
         stock: parseInt(document.getElementById("prodStock").value) || 0,
-        categoria: categoria,
+        categorias: cats,
         sub_categoria: document.getElementById("prodSubCategoria").value.trim(),
         descripcion: document.getElementById("prodDescripcion").value.trim(),
         foto_url: document.getElementById("prodFoto").value.trim(),
@@ -788,6 +790,98 @@ const CATALOGO_CATS = [
 ];
 
 let catalogoFilter = "";
+
+let categoriasEmpresa = [];
+
+async function loadCategorias() {
+    const content = document.getElementById("content");
+    content.innerHTML = '<div style="text-align:center;padding:40px;color:#8b949e">Cargando categorias...</div>';
+    const { data } = await sb.from("categorias_empresa").select("*").eq("empresa_id", empresaId).order("orden");
+    categoriasEmpresa = data || [];
+    renderCategorias();
+}
+
+function renderCategorias() {
+    const content = document.getElementById("content");
+    content.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <h2 style="margin:0;color:#c9d1d9">Categorias y Subcategorias</h2>
+            <button class="btn btn-primary" onclick="showFormCategoria()">+ Nueva Categoria</button>
+        </div>
+        <div id="formCategoria" style="display:none" class="card">
+            <h3 id="formCatTitle">Nueva Categoria</h3>
+            <input type="hidden" id="catId">
+            <div class="form-row">
+                <div class="form-group"><label>Nombre *</label><input type="text" id="catNombre" placeholder="Ej: Pizzeria, Carnes..."></div>
+                <div class="form-group"><label>Icono (emoji)</label><input type="text" id="catIcono" value="📌" maxlength="4"></div>
+            </div>
+            <div class="form-group"><label>Subcategorias (una por linea)</label>
+                <textarea id="catSubcats" rows="4" placeholder="Napolitana&#10;Especial&#10;Fugazzeta&#10;Muzzarella"></textarea>
+            </div>
+            <div style="display:flex;gap:8px">
+                <button class="btn btn-success" onclick="saveCategoria()">Guardar</button>
+                <button class="btn btn-secondary" onclick="document.getElementById('formCategoria').style.display='none'">Cancelar</button>
+            </div>
+        </div>
+        <div id="listaCats">${renderListaCats()}</div>`;
+}
+
+function renderListaCats() {
+    if (categoriasEmpresa.length === 0) return '<div class="empty"><p>No hay categorias creadas. Crea tu primera categoria para organizar tu carta.</p></div>';
+    return categoriasEmpresa.map(c => {
+        const subs = (c.subcategorias || []);
+        return `<div class="pedido-card">
+            <div style="display:flex;justify-content:space-between;align-items:start">
+                <div>
+                    <div style="font-size:18px;font-weight:bold;color:#c9d1d9">${c.icono || '📌'} ${c.nombre}</div>
+                    <div style="color:#8b949e;font-size:13px;margin-top:4px">
+                        ${subs.length > 0 ? 'Subcategorias: ' + subs.join(', ') : 'Sin subcategorias'}
+                    </div>
+                </div>
+                <div class="actions">
+                    <button class="btn btn-secondary btn-sm" onclick="editCategoria('${c.id}')">Editar</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteCategoria('${c.id}','${c.nombre.replace(/'/g,"\\'")}')">Borrar</button>
+                </div>
+            </div>
+        </div>`;
+    }).join("");
+}
+
+function showFormCategoria(id, nombre, icono, subs) {
+    document.getElementById("formCategoria").style.display = "block";
+    document.getElementById("formCatTitle").textContent = id ? "Editar Categoria" : "Nueva Categoria";
+    document.getElementById("catId").value = id || "";
+    document.getElementById("catNombre").value = nombre || "";
+    document.getElementById("catIcono").value = icono || "📌";
+    document.getElementById("catSubcats").value = (subs || []).join("\n");
+    document.getElementById("catNombre").focus();
+}
+
+function editCategoria(id) {
+    const c = categoriasEmpresa.find(x => x.id === id);
+    if (c) showFormCategoria(c.id, c.nombre, c.icono, c.subcategorias || []);
+}
+
+async function saveCategoria() {
+    const id = document.getElementById("catId").value;
+    const nombre = document.getElementById("catNombre").value.trim();
+    const icono = document.getElementById("catIcono").value.trim() || "📌";
+    const subs = document.getElementById("catSubcats").value.split("\n").map(s => s.trim()).filter(Boolean);
+    if (!nombre) { alert("Nombre es obligatorio"); return; }
+    const data = { empresa_id: empresaId, nombre, icono, subcategorias: subs };
+    if (id) {
+        await sb.from("categorias_empresa").update(data).eq("id", id);
+    } else {
+        await sb.from("categorias_empresa").insert(data);
+    }
+    await loadCategorias();
+}
+
+async function deleteCategoria(id, nombre) {
+    if (!confirm(`Borrar "${nombre}"?`)) return;
+    await sb.from("categorias_empresa").delete().eq("id", id);
+    await loadCategorias();
+}
 
 async function loadCatalogo() {
     const content = document.getElementById("content");

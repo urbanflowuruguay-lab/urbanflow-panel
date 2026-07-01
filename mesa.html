@@ -77,6 +77,7 @@
 
 <div class="app-layout">
     <div class="categorias" id="categoriasBar"></div>
+    <div class="categorias" id="subcategoriasBar" style="padding-top:0"></div>
     <div class="productos-scroll" id="mainContent">
         <div class="empty" style="padding-top:80px"><p>Cargando carta...</p></div>
     </div>
@@ -131,6 +132,7 @@ const empresaId = params.get("empresa") || "";
 let empresaData = null;
 let mesaData = null;
 let productos = [];
+let categoriasEmpresa = [];
 let carrito = [];
 let clienteToken = localStorage.getItem("cliente_token_" + mesaToken) || crypto.randomUUID();
 localStorage.setItem("cliente_token_" + mesaToken, clienteToken);
@@ -299,15 +301,17 @@ async function init() {
         return;
     }
     try {
-        const [empRes, mesaRes, prodRes, ratRes] = await Promise.all([
+        const [empRes, mesaRes, prodRes, ratRes, catsRes] = await Promise.all([
             sb.from("empresas").select("id,nombre,carta_template,logo_url").eq("id", empresaId).single(),
             sb.from("mesas").select("*").eq("mesa_token", mesaToken).single(),
-            sb.from("productos_empresa").select("*").eq("empresa_id", empresaId).eq("activo", true).order("categoria"),
-            sb.from("calificaciones").select("estrellas").eq("empresa_id", empresaId)
+            sb.from("productos_empresa").select("*").eq("empresa_id", empresaId).eq("activo", true),
+            sb.from("calificaciones").select("estrellas").eq("empresa_id", empresaId),
+            sb.from("categorias_empresa").select("*").eq("empresa_id", empresaId).order("orden")
         ]);
         empresaData = empRes.data;
         mesaData = mesaRes.data;
         productos = prodRes.data || [];
+        categoriasEmpresa = catsRes.data || [];
         const ratings = ratRes.data || [];
         empresaData._avgRating = ratings.length > 0 ? (ratings.reduce((s, r) => s + r.estrellas, 0) / ratings.length).toFixed(1) : null;
         empresaData._totalRatings = ratings.length;
@@ -367,16 +371,29 @@ const ALL_CATS = [
     { id: "Bebidas", label: "Bebidas", icon: "🥤" }
 ];
 
+function getCatsArray(p) {
+    let cats = p.categorias || p.categoria || [];
+    if (typeof cats === 'string') try { cats = JSON.parse(cats); } catch { cats = [cats]; }
+    if (!Array.isArray(cats)) cats = [cats];
+    return cats.filter(Boolean);
+}
+
 function renderProductos(filtro) {
-    let filtrados = productos;
-    if (filtro) filtrados = productos.filter(p => p.categoria === filtro);
-    const catsWithProducts = [...new Set(productos.map(p => p.categoria).filter(Boolean))];
-    const visibleCats = ALL_CATS.filter(c => catsWithProducts.includes(c.id));
-    const customCats = catsWithProducts.filter(c => !ALL_CATS.find(a => a.id === c)).map(c => ({ id: c, label: c, icon: "📌" }));
-    const allVisible = [...visibleCats, ...customCats];
+    let filtrados = filtro ? productos.filter(p => getCatsArray(p).includes(filtro)) : productos;
+    const catsMap = {};
+    categoriasEmpresa.forEach(c => { catsMap[c.nombre] = c; });
+    const usedCats = [...new Set(productos.flatMap(p => getCatsArray(p)))];
+    const allVisible = usedCats.map(name => catsMap[name] || { nombre: name, icono: "📌" });
     document.getElementById("categoriasBar").innerHTML = `
         <button class="cat-btn ${!filtro ? 'active' : ''}" onclick="renderProductos()">Todos</button>
-        ${allVisible.map(c => `<button class="cat-btn ${filtro === c.id ? 'active' : ''}" onclick="renderProductos('${c.id}')">${c.icon} ${c.label}</button>`).join("")}`;
+        ${allVisible.map(c => `<button class="cat-btn ${filtro === c.nombre ? 'active' : ''}" onclick="renderProductos('${c.nombre}')">${c.icono||'📌'} ${c.nombre}</button>`).join("")}`;
+    const subBar = document.getElementById("subcategoriasBar");
+    if (filtro && catsMap[filtro] && catsMap[filtro].subcategorias && catsMap[filtro].subcategorias.length > 0) {
+        const subs = catsMap[filtro].subcategorias;
+        subBar.innerHTML = subs.map(s => `<button class="cat-btn" onclick="filterBySubcat('${filtro}','${s}')">${s}</button>`).join("");
+    } else {
+        subBar.innerHTML = "";
+    }
     if (filtrados.length === 0) {
         document.getElementById("mainContent").innerHTML = '<div class="empty"><p>Sin productos disponibles</p></div>';
         return;
@@ -440,6 +457,40 @@ function renderProductos(filtro) {
             </div>`;
         }).join("");
     }
+    document.getElementById("mainContent").innerHTML = html;
+    updateCarritoBar();
+}
+
+function filterBySubcat(cat, sub) {
+    const filtrados = productos.filter(p => getCatsArray(p).includes(cat) && p.sub_categoria === sub);
+    const subBar = document.getElementById("subcategoriasBar");
+    subBar.querySelectorAll(".cat-btn").forEach(b => b.classList.remove("active"));
+    event.target.classList.add("active");
+    if (filtrados.length === 0) {
+        document.getElementById("mainContent").innerHTML = '<div class="empty"><p>Sin productos en esta seccion</p></div>';
+        return;
+    }
+    let html = filtrados.map(p => {
+        const enCarrito = carrito.find(c => c.id === p.id);
+        const qty = enCarrito ? enCarrito.qty : 0;
+        return `<div class="producto-card">
+            ${p.foto_url ? `<img src="${p.foto_url}" class="producto-img">` : `<div class="producto-img"></div>`}
+            <div class="producto-info">
+                <div class="producto-nombre">${p.nombre}</div>
+                ${p.descripcion ? `<div class="producto-desc">${p.descripcion}</div>` : ""}
+                <div style="display:flex;align-items:center;gap:4px">
+                    ${p.precio_oferta ? `<span class="precio-original">$${p.precio.toFixed(0)}</span>` : ""}
+                    <span class="producto-precio">$${(p.precio_oferta || p.precio).toFixed(0)}</span>
+                </div>
+                <div class="producto-add">
+                    ${qty > 0 ? `<button class="qty-btn" onclick="changeQty('${p.id}',-1)">-</button>
+                    <span class="qty-num">${qty}</span>
+                    <button class="qty-btn" onclick="changeQty('${p.id}',1)">+</button>` :
+                    `<button class="add-btn" onclick="addToCart('${p.id}')">+ Agregar</button>`}
+                </div>
+            </div>
+        </div>`;
+    }).join("");
     document.getElementById("mainContent").innerHTML = html;
     updateCarritoBar();
 }
