@@ -134,7 +134,10 @@
                 <span class="empresa-nombre" id="empresaNombre"></span>
             </div>
         </div>
-        <button class="btn-logout" onclick="logout()">Cerrar Sesion</button>
+        <div style="display:flex;align-items:center;gap:12px">
+            <span id="userEmail" style="color:#8b949e;font-size:12px"></span>
+            <button class="btn-logout" onclick="logout()">Cerrar Sesion</button>
+        </div>
     </div>
 
     <div class="tabs" id="tabsBar">
@@ -201,6 +204,7 @@ async function login() {
     empresaData = empresas[0];
 
     document.getElementById("empresaNombre").textContent = empresaData.nombre;
+    document.getElementById("userEmail").textContent = data.user.email;
 
     if (empresaData.logo_url) {
         const logo = document.getElementById("headerLogo");
@@ -1504,6 +1508,7 @@ sb.auth.getSession().then(({ data }) => {
                 empresaId = emp[0].id;
                 empresaData = emp[0];
                 document.getElementById("empresaNombre").textContent = empresaData.nombre;
+                document.getElementById("userEmail").textContent = data.session.user.email;
                 if (empresaData.logo_url) {
                     const logo = document.getElementById("headerLogo");
                     logo.src = empresaData.logo_url;
