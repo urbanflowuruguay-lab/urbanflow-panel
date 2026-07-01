@@ -55,8 +55,12 @@
     <h2>Cocina</h2>
     <div class="card">
         <div class="form-group">
-            <label>PIN</label>
-            <input type="password" id="pinInput" maxlength="6" placeholder="****" inputmode="numeric" autofocus>
+            <label>Email</label>
+            <input type="email" id="loginEmail" placeholder="tu@email.com" style="text-align:left;letter-spacing:normal">
+        </div>
+        <div class="form-group">
+            <label>Contrasena (PIN)</label>
+            <input type="password" id="pinInput" maxlength="6" placeholder="****" inputmode="numeric">
         </div>
         <button class="btn-primary" onclick="loginPin()">Entrar</button>
         <p id="loginError" style="color:#da3633;text-align:center;margin-top:12px;display:none"></p>
@@ -112,15 +116,19 @@ empresaId = params.get("empresa") || "";
 document.getElementById("pinInput").addEventListener("keypress", e => { if (e.key === "Enter") loginPin(); });
 
 async function loginPin() {
+    const email = document.getElementById("loginEmail").value.trim().toLowerCase();
     const pin = document.getElementById("pinInput").value.trim();
-    if (!pin) { showError("Ingresa tu PIN"); return; }
+    if (!email) { showError("Ingresa tu email"); return; }
+    if (!pin) { showError("Ingresa tu contrasena"); return; }
 
     const { data: usuarios } = await sb.from("usuarios_empresa").select("*, empresas(id,nombre,rubro_tipo)").eq("pin", pin).eq("activo", true);
-    if (!usuarios || usuarios.length === 0) { showError("PIN incorrecto"); return; }
+    if (!usuarios || usuarios.length === 0) { showError("Contrasena incorrecta"); return; }
 
-    const usr = usuarios[0];
+    const usr = usuarios.find(u => u.email && u.email.toLowerCase() === email) || usuarios[0];
+    if (usr.email && usr.email.toLowerCase() !== email) { showError("Email no registrado"); return; }
+
     if (usr.rol !== "cocina" && usr.rol !== "admin") {
-        showError("Este PIN no tiene acceso a cocina");
+        showError("Este usuario no tiene acceso a cocina");
         return;
     }
 
@@ -202,7 +210,15 @@ async function loadPedidos() {
 }
 
 async function updatePedido(id, nuevoEstado) {
-    await sb.from("pedidos").update({ estado: nuevoEstado }).eq("id", id);
+    const update = { estado: nuevoEstado };
+    if (nuevoEstado === "preparando") {
+        update.worker_id = usuarioData?.id;
+        update.worker_nombre = usuarioData?.nombre;
+        update.started_at = new Date().toISOString();
+    } else if (nuevoEstado === "listo") {
+        update.ready_at = new Date().toISOString();
+    }
+    await sb.from("pedidos").update(update).eq("id", id);
     loadPedidos();
 }
 
