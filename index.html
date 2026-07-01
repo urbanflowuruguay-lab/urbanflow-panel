@@ -63,12 +63,15 @@
         #loginSection { max-width: 400px; margin: 80px auto; }
         #loginSection h2 { color: #58a6ff; margin-bottom: 24px; text-align: center; }
 
-        .toggle-activo { width: 40px; height: 22px; border-radius: 11px; border: none; cursor: pointer; position: relative; }
+        .toggle-activo { width: 40px; height: 22px; border-radius: 11px; border: none; cursor: pointer; position: relative; vertical-align: middle; }
         .toggle-activo.on { background: #238636; }
         .toggle-activo.off { background: #da3633; }
         .toggle-activo::after { content: ''; position: absolute; width: 18px; height: 18px; border-radius: 50%; background: white; top: 2px; transition: 0.2s; }
         .toggle-activo.on::after { left: 20px; }
         .toggle-activo.off::after { left: 2px; }
+        .estado-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; }
+        .estado-badge.on { color: #7ee787; }
+        .estado-badge.off { color: #f85149; }
 
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
         .stat-card { background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 16px; text-align: center; }
@@ -656,7 +659,7 @@ async function loadProductos() {
         <td><strong>${p.nombre}</strong></td>
         <td><small style="color:#8b949e">${catsLabel}</small></td>
         <td>$${(p.precio || 0).toFixed(0)}</td>
-        <td><button class="toggle-activo ${p.activo ? 'on' : 'off'}" onclick="toggleProducto('${p.id}',${p.activo})"></button></td>
+        <td><span class="estado-badge ${p.activo ? 'on' : 'off'}"><button class="toggle-activo ${p.activo ? 'on' : 'off'}" onclick="toggleProducto('${p.id}',${p.activo})"></button>${p.activo ? 'Activo' : 'Inactivo'}</span></td>
         <td class="actions">
             <button class="btn btn-secondary btn-sm" onclick="editProducto('${p.id}','${(p.nombre||'').replace(/'/g,"\\'")}','${p.precio||0}','${(p.descripcion||'').replace(/'/g,"\\'")}','${JSON.stringify(cats).replace(/'/g,"\\'").replace(/"/g,"&quot;")}','${p.foto_url||''}')">Editar</button>
             <button class="btn btn-danger btn-sm" onclick="deleteProducto('${p.id}','${(p.nombre||'').replace(/'/g,"\\'")}')">Borrar</button>
