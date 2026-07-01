@@ -626,6 +626,7 @@ async function loadProductos() {
             </div>
         </div>
         <div class="form-group"><label>Descripcion</label><textarea id="prodDescripcion"></textarea></div>
+        <div class="form-group"><label>Sub-categoria (ej: Napolitana, Especial, Fugazzeta...)</label><input type="text" id="prodSubCategoria" placeholder="Opcional: tipo de producto dentro de la categoria"></div>
         <div class="form-group"><label>Foto (subir archivo)</label>
             <input type="file" id="prodFotoFile" accept="image/*" style="padding:8px;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;width:100%">
             <img id="prodFotoPreview" style="max-width:120px;max-height:80px;border-radius:6px;margin-top:8px;display:none;object-fit:cover">
@@ -637,7 +638,7 @@ async function loadProductos() {
         </div>
     </div>
     <table>
-        <thead><tr><th></th><th>Nombre</th><th>Precio</th><th>Stock</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <thead><tr><th></th><th>Nombre</th><th>Tipo</th><th>Precio</th><th>Stock</th><th>Estado</th><th>Acciones</th></tr></thead>
         <tbody id="productosTable"></tbody>
     </table>`;
 
@@ -659,18 +660,19 @@ async function loadProductos() {
 
     const tbody = document.getElementById("productosTable");
     if (!productos || productos.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty">Sin productos</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="empty">Sin productos</td></tr>';
         return;
     }
 
     tbody.innerHTML = productos.map(p => `<tr>
         <td>${p.foto_url ? `<img src="${p.foto_url}" class="producto-img">` : '<div class="producto-img" style="display:flex;align-items:center;justify-content:center;color:#484f58">?</div>'}</td>
         <td><strong>${p.nombre}</strong><br><small style="color:#8b949e">${p.categoria || ''}</small></td>
+        <td>${p.sub_categoria || '<span style="color:#484f58">—</span>'}</td>
         <td>$${(p.precio || 0).toFixed(0)}</td>
         <td>${p.stock}</td>
         <td><button class="toggle-activo ${p.activo ? 'on' : 'off'}" onclick="toggleProducto('${p.id}',${p.activo})"></button></td>
         <td class="actions">
-            <button class="btn btn-secondary btn-sm" onclick="editProducto('${p.id}','${(p.nombre||'').replace(/'/g,"\\'")}','${p.precio||0}','${p.stock||0}','${(p.descripcion||'').replace(/'/g,"\\'")}','${(p.categoria||'').replace(/'/g,"\\'")}','${p.foto_url||''}')">Editar</button>
+            <button class="btn btn-secondary btn-sm" onclick="editProducto('${p.id}','${(p.nombre||'').replace(/'/g,"\\'")}','${p.precio||0}','${p.stock||0}','${(p.descripcion||'').replace(/'/g,"\\'")}','${(p.categoria||'').replace(/'/g,"\\'")}','${p.foto_url||''}','${(p.sub_categoria||'').replace(/'/g,"\\'")}')">Editar</button>
             <button class="btn btn-danger btn-sm" onclick="deleteProducto('${p.id}','${(p.nombre||'').replace(/'/g,"\\'")}')">Borrar</button>
         </td>
     </tr>`).join("");
@@ -685,13 +687,14 @@ function showAddProducto() {
     document.getElementById("prodStock").value = "0";
     document.getElementById("prodCategoria").selectedIndex = 0;
     document.getElementById("prodCategoriaCustom").value = "";
+    document.getElementById("prodSubCategoria").value = "";
     document.getElementById("prodDescripcion").value = "";
     document.getElementById("prodFoto").value = "";
     document.getElementById("prodFotoPreview").style.display = "none";
     document.getElementById("prodFotoFile").value = "";
 }
 
-function editProducto(id, nombre, precio, stock, desc, cat, foto) {
+function editProducto(id, nombre, precio, stock, desc, cat, foto, subCat) {
     document.getElementById("formProducto").style.display = "block";
     document.getElementById("formProductoTitle").textContent = "Editar Producto";
     document.getElementById("prodId").value = id;
@@ -708,6 +711,7 @@ function editProducto(id, nombre, precio, stock, desc, cat, foto) {
         sel.value = "";
         customInput.value = cat || "";
     }
+    document.getElementById("prodSubCategoria").value = subCat || "";
     document.getElementById("prodDescripcion").value = desc;
     document.getElementById("prodFoto").value = foto;
     if (foto) {
@@ -732,6 +736,7 @@ async function saveProducto() {
         precio: parseFloat(document.getElementById("prodPrecio").value) || 0,
         stock: parseInt(document.getElementById("prodStock").value) || 0,
         categoria: categoria,
+        sub_categoria: document.getElementById("prodSubCategoria").value.trim(),
         descripcion: document.getElementById("prodDescripcion").value.trim(),
         foto_url: document.getElementById("prodFoto").value.trim(),
         activo: true
