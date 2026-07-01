@@ -589,36 +589,13 @@ async function loadProductos() {
 
     let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
         <h3 style="color:#58a6ff;margin:0">${isComida ? 'Carta / Menu' : 'Productos'}</h3>
-        <div style="display:flex;gap:8px">
-            <button class="btn btn-secondary" onclick="toggleCatsSection()">Categorias</button>
-            <button class="btn btn-primary" onclick="showAddProducto()">+ Agregar</button>
-        </div>
-    </div>
-    <div id="catsSection" style="display:none" class="card">
-        <h3 style="color:#58a6ff;margin-bottom:12px">Categorias y Subcategorias</h3>
-        <p style="color:#8b949e;font-size:13px;margin-bottom:12px">Crea categorias para organizar tu carta. Los productos pueden estar en varias categorias.</p>
-        <div id="catsList"></div>
-        <div style="margin-top:12px;border-top:1px solid #30363d;padding-top:12px">
-            <h4 style="color:#c9d1d9;font-size:14px;margin-bottom:8px" id="catsFormTitle">Nueva Categoria</h4>
-            <input type="hidden" id="catId">
-            <div class="form-row">
-                <div class="form-group"><label>Nombre *</label><input type="text" id="catNombre" placeholder="Ej: Pizzeria, Carnes..."></div>
-                <div class="form-group"><label>Icono (emoji)</label><input type="text" id="catIcono" value="📌" maxlength="4"></div>
-            </div>
-            <div class="form-group"><label>Subcategorias (una por linea)</label>
-                <textarea id="catSubcats" rows="3" placeholder="Napolitana&#10;Especial&#10;Fugazzeta"></textarea>
-            </div>
-            <div style="display:flex;gap:8px">
-                <button class="btn btn-success" onclick="saveCategoria()">Guardar Categoria</button>
-                <button class="btn btn-secondary" onclick="resetCatForm()">Cancelar</button>
-            </div>
-        </div>
+        <button class="btn btn-primary" onclick="showAddProducto()">+ Agregar</button>
     </div>
     <div id="formProducto" style="display:none" class="card">
         <h3 id="formProductoTitle">Nuevo Producto</h3>
         <input type="hidden" id="prodId">
         <div class="form-row">
-            <div class="form-group"><label>Nombre *</label><input type="text" id="prodNombre"></div>
+            <div class="form-group"><label>Nombre *</label><input type="text" id="prodNombre" placeholder="Ej: Milanesa a la napolitana"></div>
             <div class="form-group"><label>Precio ($)</label><input type="number" id="prodPrecio"></div>
         </div>
         <div class="form-row">
@@ -630,12 +607,19 @@ async function loadProductos() {
                 <input type="text" id="prodSubCategoriaCustom" placeholder="O escribir nueva..." style="width:100%;padding:8px 12px;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;font-size:13px;margin-top:6px">
             </div>
         </div>
-        <div class="form-group"><label>Categorias (selecciona varias)</label>
-            <div id="prodCatsChecks" style="display:flex;flex-wrap:wrap;gap:6px 14px;padding:8px 0"></div>
-            <input type="text" id="prodCategoriaCustom" placeholder="Nueva categoria..." style="width:100%;padding:8px 12px;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;font-size:13px;margin-top:6px">
+        <div class="form-group"><label>Categoria principal *</label>
+            <input type="text" id="prodCategoria" placeholder="Ej: Carnes, Pizzas, Bebidas..." oninput="onCategoriaInput()" style="width:100%;padding:8px 12px;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;font-size:13px">
+            <div id="catSuggestions" style="display:none;position:absolute;z-index:10;background:#161b22;border:1px solid #30363d;border-radius:6px;max-height:120px;overflow-y:auto;width:calc(100% - 32px)"></div>
         </div>
-        <div class="form-group"><label>Descripcion</label><textarea id="prodDescripcion"></textarea></div>
-        <div class="form-group"><label>Foto (subir archivo)</label>
+        <div id="otraCategoriaRow" style="display:none" class="form-group">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;color:#c9d1d9">
+                <input type="checkbox" id="prodOtraCat" onchange="onOtraCatToggle()" style="accent-color:#58a6ff"> Este producto tambien esta en otra categoria
+            </label>
+            <input type="text" id="prodCategoria2" placeholder="Segunda categoria..." oninput="onCategoriaInput2()" style="width:100%;padding:8px 12px;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;font-size:13px;margin-top:6px;display:none">
+            <div id="catSuggestions2" style="display:none;position:absolute;z-index:10;background:#161b22;border:1px solid #30363d;border-radius:6px;max-height:120px;overflow-y:auto;width:calc(100% - 32px)"></div>
+        </div>
+        <div class="form-group"><label>Descripcion</label><textarea id="prodDescripcion" rows="2"></textarea></div>
+        <div class="form-group"><label>Foto</label>
             <input type="file" id="prodFotoFile" accept="image/*" style="padding:8px;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;width:100%">
             <img id="prodFotoPreview" style="max-width:120px;max-height:80px;border-radius:6px;margin-top:8px;display:none;object-fit:cover">
             <input type="hidden" id="prodFoto">
@@ -646,22 +630,11 @@ async function loadProductos() {
         </div>
     </div>
     <table>
-        <thead><tr><th></th><th>Nombre</th><th>Tipo</th><th>Precio</th><th>Stock</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <thead><tr><th></th><th>Nombre</th><th>Categorias</th><th>Precio</th><th>Stock</th><th>Estado</th><th>Acciones</th></tr></thead>
         <tbody id="productosTable"></tbody>
     </table>`;
 
     content.innerHTML = html;
-
-    const checksDiv = document.getElementById("prodCatsChecks");
-    if (checksDiv) {
-        checksDiv.innerHTML = categoriasEmpresa.map(c =>
-            `<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:13px;color:#c9d1d9">
-                <input type="checkbox" name="prodCat" value="${c.nombre}" style="accent-color:#58a6ff" onchange="updateSubcatsDropdown()"> ${c.icono||'📌'} ${c.nombre}
-            </label>`
-        ).join("") + `<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:13px;color:#58a6ff;font-weight:bold">
-            <input type="checkbox" name="prodCat" value="__new__" style="accent-color:#58a6ff"> + Nueva
-        </label>`;
-    }
 
     document.getElementById("prodFotoFile").addEventListener("change", async function() {
         const file = this.files[0];
@@ -701,95 +674,6 @@ async function loadProductos() {
     </tr>`}).join("");
 }
 
-function toggleCatsSection() {
-    const section = document.getElementById("catsSection");
-    if (section.style.display === "none") {
-        section.style.display = "block";
-        renderCatsList();
-    } else {
-        section.style.display = "none";
-    }
-}
-
-function renderCatsList() {
-    const list = document.getElementById("catsList");
-    if (!list) return;
-    if (categoriasEmpresa.length === 0) {
-        list.innerHTML = '<p style="color:#484f58;font-size:13px">No hay categorias creadas aun.</p>';
-        return;
-    }
-    list.innerHTML = categoriasEmpresa.map(c => {
-        const subs = c.subcategorias || [];
-        return `<div style="display:flex;justify-content:space-between;align-items:start;padding:10px 0;border-bottom:1px solid #21262d">
-            <div>
-                <span style="font-size:16px;font-weight:bold;color:#c9d1d9">${c.icono || '📌'} ${c.nombre}</span>
-                <div style="color:#8b949e;font-size:12px;margin-top:2px">${subs.length > 0 ? subs.join(', ') : 'Sin subcategorias'}</div>
-            </div>
-            <div style="display:flex;gap:6px">
-                <button class="btn btn-secondary btn-sm" onclick="editCategoria('${c.id}')">Editar</button>
-                <button class="btn btn-danger btn-sm" onclick="deleteCategoria('${c.id}','${c.nombre.replace(/'/g,"\\'")}')">Borrar</button>
-            </div>
-        </div>`;
-    }).join("");
-}
-
-function editCategoria(id) {
-    const c = categoriasEmpresa.find(x => x.id === id);
-    if (!c) return;
-    document.getElementById("catsFormTitle").textContent = "Editar Categoria";
-    document.getElementById("catId").value = c.id;
-    document.getElementById("catNombre").value = c.nombre;
-    document.getElementById("catIcono").value = c.icono || "📌";
-    document.getElementById("catSubcats").value = (c.subcategorias || []).join("\n");
-}
-
-function resetCatForm() {
-    document.getElementById("catsFormTitle").textContent = "Nueva Categoria";
-    document.getElementById("catId").value = "";
-    document.getElementById("catNombre").value = "";
-    document.getElementById("catIcono").value = "📌";
-    document.getElementById("catSubcats").value = "";
-}
-
-async function saveCategoria() {
-    const id = document.getElementById("catId").value;
-    const nombre = document.getElementById("catNombre").value.trim();
-    const icono = document.getElementById("catIcono").value.trim() || "📌";
-    const subs = document.getElementById("catSubcats").value.split("\n").map(s => s.trim()).filter(Boolean);
-    if (!nombre) { alert("Nombre es obligatorio"); return; }
-    const data = { empresa_id: empresaId, nombre, icono, subcategorias: subs };
-    let result;
-    if (id) {
-        result = await sb.from("categorias_empresa").update(data).eq("id", id);
-    } else {
-        result = await sb.from("categorias_empresa").insert(data);
-    }
-    if (result.error) {
-        alert("Error guardando categoria: " + result.error.message + "\n\nDetalles: " + JSON.stringify(result.error));
-        console.error("saveCategoria error:", result.error);
-        return;
-    }
-    const { data: updated, error: fetchErr } = await sb.from("categorias_empresa").select("*").eq("empresa_id", empresaId).order("orden");
-    if (fetchErr) {
-        console.error("fetch cats error:", fetchErr);
-    }
-    categoriasEmpresa = updated || [];
-    resetCatForm();
-    renderCatsList();
-}
-
-async function deleteCategoria(id, nombre) {
-    if (!confirm(`Borrar "${nombre}"?`)) return;
-    const { error } = await sb.from("categorias_empresa").delete().eq("id", id);
-    if (error) {
-        alert("Error borrando: " + error.message);
-        return;
-    }
-    const { data: updated } = await sb.from("categorias_empresa").select("*").eq("empresa_id", empresaId).order("orden");
-    categoriasEmpresa = updated || [];
-    renderCatsList();
-}
-
 function showAddProducto() {
     document.getElementById("formProducto").style.display = "block";
     document.getElementById("formProductoTitle").textContent = "Nuevo Producto";
@@ -797,10 +681,15 @@ function showAddProducto() {
     document.getElementById("prodNombre").value = "";
     document.getElementById("prodPrecio").value = "";
     document.getElementById("prodStock").value = "0";
-    document.querySelectorAll('input[name="prodCat"]').forEach(cb => cb.checked = false);
-    document.getElementById("prodCategoriaCustom").value = "";
-    document.getElementById("prodSubCategoriaCustom").value = "";
+    document.getElementById("prodCategoria").value = "";
+    document.getElementById("otraCategoriaRow").style.display = "none";
+    document.getElementById("prodOtraCat").checked = false;
+    document.getElementById("prodCategoria2").style.display = "none";
+    document.getElementById("prodCategoria2").value = "";
+    document.getElementById("catSuggestions").style.display = "none";
+    document.getElementById("catSuggestions2").style.display = "none";
     document.getElementById("prodSubCategoria").innerHTML = '<option value="">Seleccionar...</option>';
+    document.getElementById("prodSubCategoriaCustom").value = "";
     document.getElementById("prodDescripcion").value = "";
     document.getElementById("prodFoto").value = "";
     document.getElementById("prodFotoPreview").style.display = "none";
@@ -825,10 +714,17 @@ function editProducto(id, nombre, precio, stock, desc, cat, foto, subCat) {
     }
     let catsArr = [];
     try { catsArr = JSON.parse(cat); } catch { catsArr = cat ? [cat] : []; }
-    document.querySelectorAll('input[name="prodCat"]').forEach(cb => {
-        cb.checked = catsArr.includes(cb.value) || (cb.value === "__new__" && !catsArr.some(c => categoriasEmpresa.find(ce => ce.nombre === c)));
-    });
-    updateSubcatsDropdown();
+    document.getElementById("prodCategoria").value = catsArr[0] || "";
+    document.getElementById("otraCategoriaRow").style.display = catsArr[0] ? "block" : "none";
+    if (catsArr.length > 1) {
+        document.getElementById("prodOtraCat").checked = true;
+        document.getElementById("prodCategoria2").style.display = "block";
+        document.getElementById("prodCategoria2").value = catsArr[1] || "";
+    } else {
+        document.getElementById("prodOtraCat").checked = false;
+        document.getElementById("prodCategoria2").style.display = "none";
+    }
+    updateSubcatsDropdown(catsArr);
     const select = document.getElementById("prodSubCategoria");
     let found = false;
     for (let opt of select.options) {
@@ -841,23 +737,52 @@ function editProducto(id, nombre, precio, stock, desc, cat, foto, subCat) {
 
 function cancelProducto() { document.getElementById("formProducto").style.display = "none"; }
 
-function getSelectedCats() {
-    const cats = [];
-    document.querySelectorAll('input[name="prodCat"]:checked').forEach(cb => {
-        if (cb.value !== "__new__") cats.push(cb.value);
-    });
-    const custom = document.getElementById("prodCategoriaCustom").value.trim();
-    if (custom) cats.push(custom);
-    return cats;
+function onCategoriaInput() {
+    const val = document.getElementById("prodCategoria").value.trim().toLowerCase();
+    document.getElementById("otraCategoriaRow").style.display = val ? "block" : "none";
+    const sug = document.getElementById("catSuggestions");
+    if (val.length < 1) { sug.style.display = "none"; return; }
+    const matches = categoriasEmpresa.filter(c => c.nombre.toLowerCase().includes(val));
+    if (matches.length === 0) { sug.style.display = "none"; return; }
+    sug.innerHTML = matches.map(c => `<div style="padding:6px 10px;cursor:pointer;color:#c9d1d9;border-bottom:1px solid #21262d" onmousedown="selectCategoria('${c.nombre}')">${c.icono||'📌'} ${c.nombre}</div>`).join("");
+    sug.style.display = "block";
+    updateSubcatsDropdown([document.getElementById("prodCategoria").value.trim()]);
 }
 
-function updateSubcatsDropdown() {
-    const selectedCats = getSelectedCats();
+function selectCategoria(nombre) {
+    document.getElementById("prodCategoria").value = nombre;
+    document.getElementById("catSuggestions").style.display = "none";
+    document.getElementById("otraCategoriaRow").style.display = "block";
+    updateSubcatsDropdown([nombre]);
+}
+
+function onCategoriaInput2() {
+    const val = document.getElementById("prodCategoria2").value.trim().toLowerCase();
+    const sug = document.getElementById("catSuggestions2");
+    if (val.length < 1) { sug.style.display = "none"; return; }
+    const matches = categoriasEmpresa.filter(c => c.nombre.toLowerCase().includes(val));
+    if (matches.length === 0) { sug.style.display = "none"; return; }
+    sug.innerHTML = matches.map(c => `<div style="padding:6px 10px;cursor:pointer;color:#c9d1d9;border-bottom:1px solid #21262d" onmousedown="selectCategoria2('${c.nombre}')">${c.icono||'📌'} ${c.nombre}</div>`).join("");
+    sug.style.display = "block";
+}
+
+function selectCategoria2(nombre) {
+    document.getElementById("prodCategoria2").value = nombre;
+    document.getElementById("catSuggestions2").style.display = "none";
+}
+
+function onOtraCatToggle() {
+    const checked = document.getElementById("prodOtraCat").checked;
+    document.getElementById("prodCategoria2").style.display = checked ? "block" : "none";
+    if (!checked) document.getElementById("prodCategoria2").value = "";
+}
+
+function updateSubcatsDropdown(catsArr) {
     const select = document.getElementById("prodSubCategoria");
     const currentVal = select.value;
     const allSubcats = new Set();
     categoriasEmpresa.forEach(c => {
-        if (selectedCats.includes(c.nombre) && c.subcategorias) {
+        if (catsArr.includes(c.nombre) && c.subcategorias) {
             c.subcategorias.forEach(s => allSubcats.add(s));
         }
     });
@@ -873,8 +798,13 @@ function updateSubcatsDropdown() {
 
 async function saveProducto() {
     const id = document.getElementById("prodId").value;
-    const cats = getSelectedCats();
-    if (cats.length === 0) { alert("Selecciona o escribe una categoria"); return; }
+    const cat1 = document.getElementById("prodCategoria").value.trim();
+    if (!cat1) { alert("Ingresa una categoria"); return; }
+    const cats = [cat1];
+    if (document.getElementById("prodOtraCat").checked) {
+        const cat2 = document.getElementById("prodCategoria2").value.trim();
+        if (cat2 && cat2 !== cat1) cats.push(cat2);
+    }
     const subCatCustom = document.getElementById("prodSubCategoriaCustom").value.trim();
     const subCatSelect = document.getElementById("prodSubCategoria").value;
     const subCategoria = subCatCustom || subCatSelect;
@@ -891,11 +821,20 @@ async function saveProducto() {
     };
     if (!data.nombre) { alert("Nombre es obligatorio"); return; }
 
+    for (const catName of cats) {
+        const exists = categoriasEmpresa.find(c => c.nombre === catName);
+        if (!exists) {
+            await sb.from("categorias_empresa").insert({ empresa_id: empresaId, nombre: catName, icono: "📌", subcategorias: [] });
+        }
+    }
+
     if (id) {
         await sb.from("productos_empresa").update(data).eq("id", id);
     } else {
         await sb.from("productos_empresa").insert(data);
     }
+    const { data: updated } = await sb.from("categorias_empresa").select("*").eq("empresa_id", empresaId).order("orden");
+    categoriasEmpresa = updated || [];
     cancelProducto();
     loadProductos();
 }
