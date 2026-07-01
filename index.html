@@ -725,7 +725,6 @@ function onCategoriaInput() {
     if (matches.length === 0) { sug.style.display = "none"; return; }
     sug.innerHTML = matches.map(c => `<div style="padding:6px 10px;cursor:pointer;color:#c9d1d9;border-bottom:1px solid #21262d" onmousedown="selectCategoria('${c.nombre}')">${c.icono||'📌'} ${c.nombre}</div>`).join("");
     sug.style.display = "block";
-    updateSubcatsDropdown([document.getElementById("prodCategoria").value.trim()]);
 }
 
 function selectCategoria(nombre) {
