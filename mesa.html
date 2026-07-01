@@ -488,22 +488,31 @@ function updateCarritoBar() {
 
 async function enviarPedido() {
     const total = carrito.reduce((s, c) => s + c.precio * c.qty, 0);
+    const items = carrito.map(c => ({ nombre: c.nombre, cantidad: c.qty, precio: c.precio }));
+    console.log("=== enviarPedido ===", { empresaId, mesaToken, items, total });
     try {
-        await sb.from("pedidos").insert({
+        const { data, error } = await sb.from("pedidos").insert({
             empresa_id: empresaId,
             mesa_token: mesaToken,
             cliente_nombre: "Cliente Mesa " + mesaData.numero,
             cliente_token: clienteToken,
-            items: JSON.stringify(carrito.map(c => ({ nombre: c.nombre, cantidad: c.qty, precio: c.precio }))),
+            items: JSON.stringify(items),
             total: total,
             estado: "recibido",
             tipo_entrega: "Mesa",
             notas: `Mesa #${mesaData.numero}`
         });
+        if (error) {
+            console.error("Error insertando pedido:", error);
+            alert("Error guardando pedido: " + error.message);
+            return;
+        }
+        console.log("Pedido guardado:", data);
         carrito = [];
         updateCarritoBar();
         document.getElementById("estadoPedido").classList.add("show");
     } catch (e) {
+        console.error("Excepcion enviarPedido:", e);
         alert("Error: " + e.message);
     }
 }
