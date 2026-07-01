@@ -202,6 +202,7 @@ async function login() {
         const logo = document.getElementById("headerLogo");
         logo.src = empresaData.logo_url;
         logo.style.display = "block";
+        applyLogoForma(empresaData.logo_forma || "redondo");
     }
 
     if (empresaData.rubro_tipo === "comida") {
@@ -1009,6 +1010,15 @@ async function loadPerfil() {
                         <p id="logoPlaceholder" style="${data.logo_url ? 'display:none' : ''}">Click para subir logo</p>
                     </div>
                     <input type="file" id="logoFile" accept="image/*" style="display:none">
+                    <div style="margin-top:8px">
+                        <label style="color:#8b949e;font-size:11px;text-transform:uppercase;display:block;margin-bottom:6px">Forma del logo</label>
+                        <div style="display:flex;gap:6px" id="logoFormaSelector">
+                            <button class="logo-forma-btn ${data.logo_forma === 'redondo' || !data.logo_forma ? 'active' : ''}" onclick="setLogoForma('redondo')" title="Redondo" style="width:36px;height:36px;border-radius:50%;border:2px solid ${data.logo_forma === 'redondo' || !data.logo_forma ? '#58a6ff' : '#30363d'};background:#21262d;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px">⭕</button>
+                            <button class="logo-forma-btn ${data.logo_forma === 'cuadrado' ? 'active' : ''}" onclick="setLogoForma('cuadrado')" title="Cuadrado" style="width:36px;height:36px;border-radius:6px;border:2px solid ${data.logo_forma === 'cuadrado' ? '#58a6ff' : '#30363d'};background:#21262d;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px">⬜</button>
+                            <button class="logo-forma-btn ${data.logo_forma === 'horizontal' ? 'active' : ''}" onclick="setLogoForma('horizontal')" title="Horizontal" style="width:44px;height:28px;border-radius:6px;border:2px solid ${data.logo_forma === 'horizontal' ? '#58a6ff' : '#30363d'};background:#21262d;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px">▬</button>
+                            <button class="logo-forma-btn ${data.logo_forma === 'vertical' ? 'active' : ''}" onclick="setLogoForma('vertical')" title="Vertical" style="width:28px;height:40px;border-radius:6px;border:2px solid ${data.logo_forma === 'vertical' ? '#58a6ff' : '#30363d'};background:#21262d;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px">▮</button>
+                        </div>
+                    </div>
                 </div>
                 <div style="flex:1">
                     <label style="color:#8b949e;font-size:12px;text-transform:uppercase;display:block;margin-bottom:4px">Foto del negocio</label>
@@ -1084,6 +1094,7 @@ async function loadPerfil() {
             const headerLogo = document.getElementById("headerLogo");
             headerLogo.src = urlData.publicUrl;
             headerLogo.style.display = "block";
+            applyLogoForma(currentLogoForma || empresaData.logo_forma || "redondo");
         } else {
             alert("Error subiendo logo: " + error.message);
         }
@@ -1106,6 +1117,34 @@ async function loadPerfil() {
             alert("Error subiendo foto: " + error.message);
         }
     });
+}
+
+let currentLogoForma = "";
+
+function setLogoForma(forma) {
+    currentLogoForma = forma;
+    document.querySelectorAll(".logo-forma-btn").forEach(btn => {
+        btn.style.borderColor = "#30363d";
+        btn.classList.remove("active");
+    });
+    event.target.closest(".logo-forma-btn").style.borderColor = "#58a6ff";
+    event.target.closest(".logo-forma-btn").classList.add("active");
+    applyLogoForma(forma);
+    if (empresaId) sb.from("empresas").update({ logo_forma: forma }).eq("id", empresaId);
+}
+
+function applyLogoForma(forma) {
+    const preview = document.getElementById("logoPreview");
+    const header = document.getElementById("headerLogo");
+    const styles = {
+        redondo:    { radius: "50%",    w: "", h: "" },
+        cuadrado:   { radius: "12px",   w: "", h: "" },
+        horizontal: { radius: "10px",   w: "100%", h: "auto" },
+        vertical:   { radius: "10px",   w: "auto", h: "100%" }
+    };
+    const s = styles[forma] || styles.redondo;
+    if (preview) { preview.style.borderRadius = s.radius; }
+    if (header) { header.style.borderRadius = s.radius; }
 }
 
 async function saveFotos() {
@@ -1454,6 +1493,7 @@ sb.auth.getSession().then(({ data }) => {
                     const logo = document.getElementById("headerLogo");
                     logo.src = empresaData.logo_url;
                     logo.style.display = "block";
+                    applyLogoForma(empresaData.logo_forma || "redondo");
                 }
                 if (empresaData.rubro_tipo === "comida") {
                     document.getElementById("tab_reservas").style.display = "";

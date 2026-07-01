@@ -146,6 +146,17 @@ localStorage.setItem("cliente_token_" + mesaToken, clienteToken);
 
 const INSTRUCCION = "Elegi lo que quieras del menu, dale aceptar para que nuestra cocina lo prepare y solo espera en tu mesa";
 
+function getLogoFormaStyle(forma, size) {
+    const s = size || 96;
+    const map = {
+        redondo:    { radius: "50%",    w: s + "px", h: s + "px" },
+        cuadrado:   { radius: Math.round(s * 0.12) + "px", w: s + "px", h: s + "px" },
+        horizontal: { radius: Math.round(s * 0.1) + "px",  w: Math.round(s * 1.3) + "px", h: Math.round(s * 0.7) + "px" },
+        vertical:   { radius: Math.round(s * 0.1) + "px",  w: Math.round(s * 0.7) + "px", h: Math.round(s * 1.2) + "px" }
+    };
+    return map[forma] || map.redondo;
+}
+
 const portadas = {
     dark_elegance: {
         bg: "radial-gradient(ellipse at 50% 30%, #1a1a2e 0%, #0a0a0a 60%, #000 100%)",
@@ -158,10 +169,11 @@ const portadas = {
         decoColor: "rgba(212,175,55,0.15)",
         instructColor: "rgba(212,175,55,0.4)",
         footerColor: "rgba(212,175,55,0.2)",
-        render(el, nombre, mesa, logoUrl, initials) {
+        render(el, nombre, mesa, logoUrl, initials, logoForma) {
+            const ls = getLogoFormaStyle(logoForma, 96);
             el.innerHTML = `
                 <div style="width:1px;height:60px;background:linear-gradient(to bottom,transparent,${this.decoColor},transparent);margin-bottom:32px"></div>
-                ${logoUrl ? `<img src="${logoUrl}" style="width:96px;height:96px;border-radius:50%;object-fit:cover;border:2px solid ${this.ringColor};margin-bottom:24px;animation:scaleIn 0.8s ease 0.2s both">` :
+                ${logoUrl ? `<img src="${logoUrl}" style="width:${ls.w};height:${ls.h};border-radius:${ls.radius};object-fit:cover;border:2px solid ${this.ringColor};margin-bottom:24px;animation:scaleIn 0.8s ease 0.2s both">` :
                 `<div style="width:96px;height:96px;border-radius:50%;border:2px solid ${this.ringColor};display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:32px;color:${this.color};margin-bottom:24px;animation:scaleIn 0.8s ease 0.2s both">${initials}</div>`}
                 <div style="width:40px;height:1px;background:${this.color};margin-bottom:24px;animation:expandH 0.6s ease 0.6s both"></div>
                 <div style="font-family:'DM Serif Display',serif;font-size:30px;color:${this.color};letter-spacing:3px;margin-bottom:6px;animation:fadeUp 0.8s ease 0.8s both">${nombre}</div>
@@ -178,14 +190,15 @@ const portadas = {
         subColor: "rgba(250,246,238,0.4)",
         instructColor: "rgba(250,246,238,0.35)",
         footerColor: "rgba(250,246,238,0.2)",
-        render(el, nombre, mesa, logoUrl, initials) {
+        render(el, nombre, mesa, logoUrl, initials, logoForma) {
+            const ls = getLogoFormaStyle(logoForma, 72);
             el.innerHTML = `
                 <div style="width:100%;max-width:300px;margin-bottom:28px;animation:fadeIn 0.8s ease 0.2s both">
                     <div style="border-top:3px double ${this.color};border-bottom:1px solid ${this.color};padding:12px 0;text-align:center">
                         <div style="font-family:'Playfair Display',serif;font-size:9px;letter-spacing:8px;text-transform:uppercase;color:${this.subColor}">Restaurante</div>
                     </div>
                 </div>
-                ${logoUrl ? `<img src="${logoUrl}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;margin-bottom:20px;animation:scaleIn 0.8s ease 0.4s both">` :
+                ${logoUrl ? `<img src="${logoUrl}" style="width:${ls.w};height:${ls.h};border-radius:${ls.radius};object-fit:cover;margin-bottom:20px;animation:scaleIn 0.8s ease 0.4s both">` :
                 `<div style="width:72px;height:72px;border-radius:50%;border:1px solid ${this.subColor};display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:26px;color:${this.color};margin-bottom:20px;animation:scaleIn 0.8s ease 0.4s both">${initials}</div>`}
                 <div style="font-family:'Playfair Display',serif;font-size:34px;color:${this.color};line-height:1.1;margin-bottom:8px;animation:fadeUp 0.8s ease 0.6s both">${nombre}</div>
                 <div style="font-family:'Lora',serif;font-size:11px;color:${this.subColor};letter-spacing:4px;text-transform:uppercase;margin-bottom:28px;animation:fadeIn 0.6s ease 1s both">bienvenidos</div>
@@ -203,9 +216,10 @@ const portadas = {
         subColor: "rgba(23,23,23,0.35)",
         instructColor: "rgba(23,23,23,0.4)",
         footerColor: "rgba(23,23,23,0.15)",
-        render(el, nombre, mesa, logoUrl, initials) {
+        render(el, nombre, mesa, logoUrl, initials, logoForma) {
+            const ls = getLogoFormaStyle(logoForma, 80);
             el.innerHTML = `
-                ${logoUrl ? `<img src="${logoUrl}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-bottom:32px;animation:scaleIn 0.8s ease 0.2s both">` :
+                ${logoUrl ? `<img src="${logoUrl}" style="width:${ls.w};height:${ls.h};border-radius:${ls.radius};object-fit:cover;margin-bottom:32px;animation:scaleIn 0.8s ease 0.2s both">` :
                 `<div style="width:80px;height:80px;border-radius:50%;border:1px solid ${this.subColor};display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:300;color:${this.color};margin-bottom:32px;animation:scaleIn 0.8s ease 0.2s both">${initials}</div>`}
                 <div style="font-size:24px;font-weight:200;color:${this.color};letter-spacing:8px;text-transform:uppercase;margin-bottom:8px;animation:fadeUp 0.8s ease 0.6s both">${nombre}</div>
                 <div style="font-size:10px;color:${this.subColor};letter-spacing:4px;text-transform:uppercase;margin-bottom:40px;animation:fadeIn 0.6s ease 1s both">bienvenido</div>
@@ -220,11 +234,12 @@ const portadas = {
         subColor: "rgba(241,250,238,0.5)",
         instructColor: "rgba(241,250,238,0.5)",
         footerColor: "rgba(241,250,238,0.2)",
-        render(el, nombre, mesa, logoUrl, initials) {
+        render(el, nombre, mesa, logoUrl, initials, logoForma) {
+            const ls = getLogoFormaStyle(logoForma, 88);
             el.innerHTML = `
                 <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#e63946,#f77f00,#e63946);animation:fadeIn 0.6s ease 0.1s both"></div>
                 <div style="position:absolute;bottom:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#e63946,#f77f00,#e63946);animation:fadeIn 0.6s ease 0.1s both"></div>
-                ${logoUrl ? `<img src="${logoUrl}" style="width:88px;height:88px;border-radius:12px;object-fit:cover;border:3px solid #e63946;margin-bottom:24px;animation:scaleIn 0.6s ease 0.3s both">` :
+                ${logoUrl ? `<img src="${logoUrl}" style="width:${ls.w};height:${ls.h};border-radius:${ls.radius};object-fit:cover;border:3px solid #e63946;margin-bottom:24px;animation:scaleIn 0.6s ease 0.3s both">` :
                 `<div style="width:88px;height:88px;border-radius:12px;border:3px solid #e63946;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:${this.color};margin-bottom:24px;animation:scaleIn 0.6s ease 0.3s both">${initials}</div>`}
                 <div style="font-size:32px;font-weight:700;color:${this.color};letter-spacing:2px;margin-bottom:4px;animation:fadeUp 0.6s ease 0.5s both;text-transform:uppercase">${nombre}</div>
                 <div style="font-size:11px;color:${this.subColor};letter-spacing:6px;text-transform:uppercase;margin-bottom:8px;animation:fadeIn 0.4s ease 0.8s both">bienvenido</div>
@@ -239,10 +254,11 @@ const portadas = {
         subColor: "rgba(224,224,255,0.4)",
         instructColor: "rgba(224,224,255,0.45)",
         footerColor: "rgba(224,224,255,0.2)",
-        render(el, nombre, mesa, logoUrl, initials) {
+        render(el, nombre, mesa, logoUrl, initials, logoForma) {
+            const ls = getLogoFormaStyle(logoForma, 80);
             el.innerHTML = `
                 <div style="backdrop-filter:blur(20px);background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:24px;padding:36px 28px;width:90%;max-width:320px;animation:scaleIn 0.8s ease 0.2s both">
-                    ${logoUrl ? `<img src="${logoUrl}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid rgba(167,139,250,0.3);margin-bottom:20px;display:block;margin-left:auto;margin-right:auto">` :
+                    ${logoUrl ? `<img src="${logoUrl}" style="width:${ls.w};height:${ls.h};border-radius:${ls.radius};object-fit:cover;border:2px solid rgba(167,139,250,0.3);margin-bottom:20px;display:block;margin-left:auto;margin-right:auto">` :
                     `<div style="width:80px;height:80px;border-radius:50%;border:2px solid rgba(167,139,250,0.3);display:flex;align-items:center;justify-content:center;font-size:28px;color:${this.color};margin:0 auto 20px">${initials}</div>`}
                     <div style="font-size:24px;font-weight:300;color:${this.color};letter-spacing:2px;margin-bottom:4px">${nombre}</div>
                     <div style="font-size:10px;color:${this.subColor};letter-spacing:4px;text-transform:uppercase;margin-bottom:24px">bienvenido</div>
@@ -259,11 +275,12 @@ const portadas = {
         subColor: "rgba(245,240,238,0.4)",
         instructColor: "rgba(245,240,238,0.4)",
         footerColor: "rgba(245,240,238,0.2)",
-        render(el, nombre, mesa, logoUrl, initials) {
+        render(el, nombre, mesa, logoUrl, initials, logoForma) {
+            const ls = getLogoFormaStyle(logoForma, 90);
             el.innerHTML = `
                 <div style="width:2px;height:40px;background:linear-gradient(to bottom,transparent,rgba(139,69,19,0.6),transparent);margin-bottom:24px;animation:fadeIn 0.6s ease 0.1s both"></div>
                 <div style="font-family:'Playfair Display',serif;font-size:11px;letter-spacing:8px;text-transform:uppercase;color:rgba(139,69,19,0.8);margin-bottom:20px;animation:fadeIn 0.6s ease 0.3s both">~ desde 1987 ~</div>
-                ${logoUrl ? `<img src="${logoUrl}" style="width:90px;height:90px;border-radius:50%;object-fit:cover;border:3px solid rgba(139,69,19,0.4);margin-bottom:20px;animation:scaleIn 0.8s ease 0.4s both">` :
+                ${logoUrl ? `<img src="${logoUrl}" style="width:${ls.w};height:${ls.h};border-radius:${ls.radius};object-fit:cover;border:3px solid rgba(139,69,19,0.4);margin-bottom:20px;animation:scaleIn 0.8s ease 0.4s both">` :
                 `<div style="width:90px;height:90px;border-radius:50%;border:3px solid rgba(139,69,19,0.4);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:30px;color:${this.color};margin-bottom:20px;animation:scaleIn 0.8s ease 0.4s both">${initials}</div>`}
                 <div style="font-family:'Playfair Display',serif;font-size:32px;color:${this.color};line-height:1.1;margin-bottom:6px;animation:fadeUp 0.8s ease 0.6s both">${nombre}</div>
                 <div style="font-family:'Lora',serif;font-size:11px;color:rgba(139,69,19,0.7);letter-spacing:6px;text-transform:uppercase;margin-bottom:28px;animation:fadeIn 0.6s ease 1s both">bienvenidos</div>
@@ -309,7 +326,7 @@ async function init() {
     }
     try {
         const [empRes, mesaRes, prodRes, ratRes, catsRes] = await Promise.all([
-            sb.from("empresas").select("id,nombre,carta_template,logo_url").eq("id", empresaId).single(),
+            sb.from("empresas").select("id,nombre,carta_template,logo_url,logo_forma").eq("id", empresaId).single(),
             sb.from("mesas").select("*").eq("mesa_token", mesaToken).single(),
             sb.from("productos_empresa").select("*").eq("empresa_id", empresaId).eq("activo", true),
             sb.from("calificaciones").select("estrellas").eq("empresa_id", empresaId),
@@ -355,7 +372,7 @@ async function init() {
         document.body.style.background = p.bg;
 
         const initials = empresaData.nombre.split(" ").map(w => w[0]).join("").substring(0, 2).toUpperCase();
-        p.render(document.getElementById("portadaContent"), empresaData.nombre, mesaData.numero, empresaData.logo_url, initials);
+        p.render(document.getElementById("portadaContent"), empresaData.nombre, mesaData.numero, empresaData.logo_url, initials, empresaData.logo_forma);
 
         if (empresaData._avgRating) {
             const stars = "★".repeat(Math.round(empresaData._avgRating)) + "☆".repeat(5 - Math.round(empresaData._avgRating));
