@@ -68,8 +68,12 @@
     <h2>Delivery</h2>
     <div class="card">
         <div class="form-group">
-            <label>Tu PIN</label>
-            <input type="password" id="pinInput" maxlength="6" placeholder="****" inputmode="numeric" autofocus>
+            <label>Email</label>
+            <input type="email" id="loginEmail" placeholder="tu@email.com" style="text-align:left;letter-spacing:normal">
+        </div>
+        <div class="form-group">
+            <label>Contrasena (PIN)</label>
+            <input type="password" id="pinInput" maxlength="6" placeholder="****" inputmode="numeric">
         </div>
         <button class="btn-primary" onclick="loginPin()">Entrar</button>
         <p id="loginError" style="color:#da3633;text-align:center;margin-top:12px;display:none"></p>
@@ -133,12 +137,15 @@ function playNotif() {
 document.getElementById("pinInput").addEventListener("keypress", e => { if (e.key === "Enter") loginPin(); });
 
 async function loginPin() {
+    const email = document.getElementById("loginEmail").value.trim().toLowerCase();
     const pin = document.getElementById("pinInput").value.trim();
-    if (!pin) { showError("Ingresa el PIN"); return; }
+    if (!email) { showError("Ingresa tu email"); return; }
+    if (!pin) { showError("Ingresa tu contrasena"); return; }
     const { data: usuarios } = await sb.from("usuarios_empresa").select("*, empresas(id,nombre)").eq("pin", pin).eq("activo", true);
-    if (!usuarios || usuarios.length === 0) { showError("PIN incorrecto"); return; }
-    const usr = usuarios[0];
-    if (usr.rol !== "delivery" && usr.rol !== "admin") { showError("Este PIN no es de delivery"); return; }
+    if (!usuarios || usuarios.length === 0) { showError("Contrasena incorrecta"); return; }
+    const usr = usuarios.find(u => u.email && u.email.toLowerCase() === email) || usuarios[0];
+    if (usr.email && usr.email.toLowerCase() !== email) { showError("Email no registrado"); return; }
+    if (usr.rol !== "delivery" && usr.rol !== "admin") { showError("Este usuario no es de delivery"); return; }
     empresaId = usr.empresa_id;
     empresaData = usr.empresas;
     usuarioData = usr;
@@ -222,7 +229,7 @@ async function loadPedidos() {
 }
 
 async function tomarPedido(id) {
-    await sb.from("pedidos").update({ estado: "en_camino", delivery_nombre: deliveryNombre }).eq("id", id);
+    await sb.from("pedidos").update({ estado: "en_camino", delivery_nombre: deliveryNombre, worker_id: usuarioData?.id }).eq("id", id);
     playNotif();
     loadPedidos();
 }
@@ -258,7 +265,7 @@ async function confirmarEntrega() {
     document.getElementById("modalError").style.display = "none";
     document.getElementById("modalOk").style.display = "block";
 
-    await sb.from("pedidos").update({ estado: "entregado" }).eq("id", pedidoActualId);
+    await sb.from("pedidos").update({ estado: "entregado", delivered_at: new Date().toISOString() }).eq("id", pedidoActualId);
 
     setTimeout(() => {
         cerrarModal();
