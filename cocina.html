@@ -109,15 +109,7 @@ function playNotif() {
 const params = new URLSearchParams(window.location.search);
 empresaId = params.get("empresa") || "";
 
-if (empresaId) {
-    document.getElementById("loginSection").style.display = "none";
-    document.getElementById("kitchenSection").style.display = "block";
-    loadPedidos();
-    loadMesasLimpiar();
-    setInterval(() => { loadPedidos(); loadMesasLimpiar(); }, 10000);
-} else {
-    document.getElementById("pinInput").addEventListener("keypress", e => { if (e.key === "Enter") loginPin(); });
-}
+document.getElementById("pinInput").addEventListener("keypress", e => { if (e.key === "Enter") loginPin(); });
 
 async function loginPin() {
     const pin = document.getElementById("pinInput").value.trim();
