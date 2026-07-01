@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mi Trabajo - UrbanFlow</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0d1117; color: #c9d1d9; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px 16px; }
+        .logo { font-size: 48px; margin-bottom: 8px; }
+        h1 { color: #58a6ff; font-size: 22px; margin-bottom: 4px; }
+        .subtitle { color: #8b949e; font-size: 14px; margin-bottom: 24px; }
+        .btn-grid { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 400px; }
+        .btn-card { background: #161b22; border: 2px solid #30363d; border-radius: 16px; padding: 20px; display: flex; align-items: center; gap: 16px; cursor: pointer; transition: all 0.2s; text-decoration: none; color: inherit; }
+        .btn-card:active { transform: scale(0.97); }
+        .btn-card .icon { font-size: 36px; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; border-radius: 12px; flex-shrink: 0; }
+        .btn-card .info h2 { font-size: 18px; color: #c9d1d9; margin-bottom: 2px; }
+        .btn-card .info p { font-size: 13px; color: #8b949e; }
+        .btn-card.cocina { border-color: #1f6feb33; } .btn-card.cocina .icon { background: #1f6feb22; }
+        .btn-card.camarero { border-color: #23863633; } .btn-card.camarero .icon { background: #23863622; }
+        .btn-card.delivery { border-color: #f0883e33; } .btn-card.delivery .icon { background: #f0883e22; }
+        .btn-card.caja { border-color: #da363333; } .btn-card.caja .icon { background: #da363322; }
+        .btn-card:active.cocina { border-color: #1f6feb; background: #1f6feb11; }
+        .btn-card:active.camarero { border-color: #238636; background: #23863611; }
+        .btn-card:active.delivery { border-color: #f0883e; background: #f0883e11; }
+        .btn-card:active.caja { border-color: #da3633; background: #da363311; }
+        .saved-info { margin-top: 24px; padding: 12px 16px; background: #161b22; border: 1px solid #30363d; border-radius: 8px; text-align: center; width: 100%; max-width: 400px; }
+        .saved-info p { color: #8b949e; font-size: 13px; }
+        .saved-info strong { color: #c9d1d9; }
+        .clear-btn { margin-top: 8px; background: none; border: none; color: #da3633; font-size: 12px; cursor: pointer; text-decoration: underline; }
+        .enterprise-name { color: #484f58; font-size: 12px; margin-top: 16px; }
+    </style>
+</head>
+<body>
+    <div class="logo">🏪</div>
+    <h1>Mi Trabajo</h1>
+    <p class="subtitle">Elegí tu pantalla</p>
+
+    <div class="btn-grid">
+        <a class="btn-card" href="#" onclick="goTo('fichaje')" style="border-color:#58a6ff33">
+            <div class="icon" style="background:#58a6ff22">⏰</div>
+            <div class="info">
+                <h2>Fichaje</h2>
+                <p>Marcar entrada y salida</p>
+            </div>
+        </a>
+        <a class="btn-card cocina" href="#" onclick="goTo('cocina')">
+            <div class="icon">👨‍🍳</div>
+            <div class="info">
+                <h2>Cocina</h2>
+                <p>Ver y preparar pedidos</p>
+            </div>
+        </a>
+        <a class="btn-card camarero" href="#" onclick="goTo('camarero')">
+            <div class="icon">🍽️</div>
+            <div class="info">
+                <h2>Camarero</h2>
+                <p>Llevar pedidos a mesas</p>
+            </div>
+        </a>
+        <a class="btn-card delivery" href="#" onclick="goTo('delivery')">
+            <div class="icon">🚴</div>
+            <div class="info">
+                <h2>Delivery</h2>
+                <p>Entregar pedidos a domicilio</p>
+            </div>
+        </a>
+        <a class="btn-card caja" href="#" onclick="goTo('caja')">
+            <div class="icon">💰</div>
+            <div class="info">
+                <h2>Caja</h2>
+                <p>Cobrar pedidos</p>
+            </div>
+        </a>
+    </div>
+
+    <div class="saved-info" id="savedInfo" style="display:none">
+        <p>Última pantalla: <strong id="lastScreen"></strong></p>
+        <button class="clear-btn" onclick="clearSaved()">Cambiar de pantalla</button>
+    </div>
+    <div class="enterprise-name" id="empName"></div>
+</body>
+<script>
+const params = new URLSearchParams(window.location.search);
+const empresaId = params.get("empresa") || "";
+const saved = localStorage.getItem("uf_last_screen_" + empresaId);
+
+const nombres = { cocina: "👨‍🍳 Cocina", camarero: "🍽️ Camarero", delivery: "🚴 Delivery", caja: "💰 Caja" };
+
+if (saved && nombres[saved]) {
+    document.getElementById("savedInfo").style.display = "block";
+    document.getElementById("lastScreen").textContent = nombres[saved];
+    // Auto-open after 1.5s if they just tap the screen
+    setTimeout(() => { window.location.href = saved + ".html?empresa=" + empresaId; }, 1500);
+}
+
+function goTo(screen) {
+    localStorage.setItem("uf_last_screen_" + empresaId, screen);
+    window.location.href = screen + ".html?empresa=" + empresaId;
+}
+
+function clearSaved() {
+    localStorage.removeItem("uf_last_screen_" + empresaId);
+    document.getElementById("savedInfo").style.display = "none";
+}
+</script>
+</html>
