@@ -352,9 +352,16 @@ async function loadPedidos() {
             acciones = `<button class="btn btn-success btn-sm" onclick="updatePedido('${p.id}','listo')">Listo</button>
                         <button class="btn btn-danger btn-sm" onclick="updatePedido('${p.id}','cancelado')">Cancelar</button>`;
         } else if (p.estado === "listo") {
-            acciones = `<button class="btn btn-primary btn-sm" onclick="asignarDelivery('${p.id}')">🚴 Asignar Delivery</button>`;
+            if (p.tipo_entrega === "Mesa") {
+                acciones = `<button class="btn btn-success btn-sm" onclick="asignarCamarero('${p.id}')">🍽️ Asignar camarero</button>`;
+            } else if (p.tipo_entrega === "Delivery" || p.tipo_entrega === "Domicilio") {
+                acciones = `<button class="btn btn-primary btn-sm" onclick="asignarDelivery('${p.id}')">🚴 Asignar Delivery</button>`;
+            } else {
+                acciones = `<button class="btn btn-success btn-sm" onclick="updatePedido('${p.id}','entregado')">✅ Entregado</button>`;
+            }
         }
         const deliveryInfo = p.delivery_nombre ? `<div style="color:#58a6ff;font-size:12px;margin-top:4px">🚴 ${p.delivery_nombre}</div>` : "";
+        const camareroInfo = p.worker_nombre && p.tipo_entrega === "Mesa" ? `<div style="color:#7ee787;font-size:12px;margin-top:4px">🍽️ ${p.worker_nombre}</div>` : "";
         const secretaInfo = p.palabra_secreta ? `<div style="color:#f0883e;font-size:12px;margin-top:4px">🔑 Secreto: <strong>${p.palabra_secreta}</strong></div>` : "";
         return `<div class="pedido-card">
             <div class="pedido-header">
@@ -366,7 +373,7 @@ async function loadPedidos() {
                 <span class="pedido-total">$${(p.total || 0).toFixed(0)}</span>
                 <div class="actions">${acciones}</div>
             </div>
-            ${deliveryInfo}${secretaInfo}
+            ${deliveryInfo}${camareroInfo}${secretaInfo}
             <div style="color:#484f58;font-size:11px;margin-top:4px">${p.notas || ""} | ${p.tipo_entrega || "Retiro"} | ${fecha}</div>
         </div>`;
     }).join("");
@@ -402,6 +409,36 @@ function asignarDelivery(pedidoId) {
 
 function confirmarAsignar(pedidoId, workerId, workerName, palabra, el) {
     sb.from("pedidos").update({ estado: "en_camino", palabra_secreta: palabra, worker_id: workerId, worker_nombre: workerName }).eq("id", pedidoId).then(() => {
+        el.closest("[style*='fixed']").remove();
+        loadPedidos();
+    });
+}
+
+function asignarCamarero(pedidoId) {
+    sb.from("usuarios_empresa").select("*").eq("empresa_id", empresaId).in("rol", ["camarero","mesero","admin"]).eq("activo", true).then(({ data }) => {
+        const camareros = data || [];
+        if (camareros.length === 0) {
+            alert("No hay camareros activos. Crealos en Usuarios con rol 'Camarero'.");
+            return;
+        }
+        let html = `<div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:300;display:flex;align-items:center;justify-content:center" onclick="if(event.target===this)this.remove()">
+            <div style="background:#161b22;border:1px solid #30363d;border-radius:12px;padding:20px;width:90%;max-width:360px">
+                <h3 style="color:#7ee787;margin-bottom:12px">🍽️ Asignar camarero</h3>
+                <p style="color:#8b949e;font-size:13px;margin-bottom:12px">Seleccioná quién lleva el pedido a la mesa</p>
+                <div id="camareroList">${camareros.map(c => `
+                    <div style="padding:12px;background:#0d1117;border:1px solid #30363d;border-radius:8px;margin-bottom:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="confirmarCamarero('${pedidoId}','${c.id}','${c.nombre}',this)">
+                        <span style="color:#c9d1d9;font-weight:600">🍽️ ${c.nombre}</span>
+                        <span style="color:#7ee787;font-size:12px">Asignar →</span>
+                    </div>
+                `).join("")}</div>
+            </div>
+        </div>`;
+        document.body.insertAdjacentHTML("beforeend", html);
+    });
+}
+
+function confirmarCamarero(pedidoId, workerId, workerName, el) {
+    sb.from("pedidos").update({ worker_id: workerId, worker_nombre: workerName }).eq("id", pedidoId).then(() => {
         el.closest("[style*='fixed']").remove();
         loadPedidos();
     });
@@ -1329,7 +1366,7 @@ async function deleteDiseno(id) {
 const roles = [
     { value: "cocina", label: "Cocina", desc: "Solo ve pedidos para preparar" },
     { value: "caja", label: "Caja", desc: "Ve pedidos y gestiona pagos" },
-    { value: "mesero", label: "Mesero", desc: "Ve reservas y mesas" },
+    { value: "camarero", label: "Camarero", desc: "Lleva pedidos a las mesas" },
     { value: "delivery", label: "Delivery", desc: "Ve pedidos listos para entregar" },
     { value: "admin", label: "Administrador", desc: "Acceso completo (igual que el dueño)" }
 ];
@@ -1388,7 +1425,9 @@ async function loadUsuarios() {
             <p style="color:#8b949e;font-size:13px;margin-bottom:12px">Copiá este link y abrilo en la tablet/PC de cocina, delivery, etc.</p>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
                 <button class="btn btn-primary btn-sm" onclick="copyLink('cocina')">Copiar link Cocina</button>
+                <button class="btn btn-success btn-sm" onclick="copyLink('camarero')">Copiar link Camarero</button>
                 <button class="btn btn-primary btn-sm" onclick="copyLink('delivery')">Copiar link Delivery</button>
+                <button class="btn btn-warning btn-sm" onclick="copyLink('caja')">Copiar link Caja</button>
             </div>
         </div>`;
     }
