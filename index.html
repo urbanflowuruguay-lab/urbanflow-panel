@@ -1424,10 +1424,14 @@ async function loadUsuarios() {
             <h3 style="color:#58a6ff">Abrir en otra pantalla</h3>
             <p style="color:#8b949e;font-size:13px;margin-bottom:12px">Copiá este link y abrilo en la tablet/PC de cocina, delivery, etc.</p>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
-                <button class="btn btn-primary btn-sm" onclick="copyLink('cocina')">Copiar link Cocina</button>
-                <button class="btn btn-success btn-sm" onclick="copyLink('camarero')">Copiar link Camarero</button>
-                <button class="btn btn-primary btn-sm" onclick="copyLink('delivery')">Copiar link Delivery</button>
-                <button class="btn btn-warning btn-sm" onclick="copyLink('caja')">Copiar link Caja</button>
+                <button class="btn btn-success btn-sm" onclick="copyLink('hub')" style="background:#238636;font-size:14px;padding:10px 16px">📱 Link Hub (acceso directo)</button>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+                <button class="btn btn-primary btn-sm" onclick="copyLink('fichaje')">⏰ Fichaje</button>
+                <button class="btn btn-primary btn-sm" onclick="copyLink('cocina')">👨‍🍳 Cocina</button>
+                <button class="btn btn-success btn-sm" onclick="copyLink('camarero')">🍽️ Camarero</button>
+                <button class="btn btn-primary btn-sm" onclick="copyLink('delivery')">🚴 Delivery</button>
+                <button class="btn btn-warning btn-sm" onclick="copyLink('caja')">💰 Caja</button>
             </div>
         </div>`;
     }
