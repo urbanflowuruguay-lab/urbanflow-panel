@@ -176,7 +176,7 @@ async function savePhoto() {
         const ext = window._photoData.includes("png") ? "png" : "jpg";
         const fileName = "fotos/" + usuarioData.id + "." + ext;
 
-        const resp = await fetch("https://eyfgkopaamnkprzpwocz.supabase.co/storage/v1/object/avatars/" + fileName, {
+        const resp = await fetch("https://eyfgkopaamnkprzpwocz.supabase.co/storage/v1/object/ocio_fotos/" + fileName, {
             method: "POST",
             headers: {
                 "apikey": SUPABASE_ANON,
@@ -196,7 +196,7 @@ async function savePhoto() {
             return;
         }
 
-        const publicUrl = "https://eyfgkopaamnkprzpwocz.supabase.co/storage/v1/object/public/avatars/" + fileName;
+        const publicUrl = "https://eyfgkopaamnkprzpwocz.supabase.co/storage/v1/object/public/ocio_fotos/" + fileName;
         await sb.from("usuarios_empresa").update({ foto_url: publicUrl }).eq("id", usuarioData.id);
         usuarioData.foto_url = publicUrl;
 
