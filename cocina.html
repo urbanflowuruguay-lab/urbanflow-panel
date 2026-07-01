@@ -46,6 +46,7 @@
         .form-group input:focus { border-color: #58a6ff; outline: none; }
         .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; }
         .btn-primary { background: #1f6feb; color: white; width: 100%; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: 600; }
+        @keyframes glow { 0%, 100% { box-shadow: 0 0 5px rgba(240,230,140,0.3); } 50% { box-shadow: 0 0 15px rgba(240,230,140,0.5); } }
     </style>
 </head>
 <body>
@@ -80,6 +81,10 @@
             <div class="stat"><div class="num" style="color:#7ee787" id="statListos">0</div><div class="label">Listos</div></div>
         </div>
         <div id="pedidosContainer"></div>
+        <div id="mesasSection" style="margin-top:24px;display:none">
+            <h3 style="color:#58a6ff;margin-bottom:12px">Mesas para limpiar</h3>
+            <div id="mesasLimpiar" style="display:flex;flex-wrap:wrap;gap:12px"></div>
+        </div>
     </div>
 </div>
 
@@ -108,7 +113,8 @@ if (empresaId) {
     document.getElementById("loginSection").style.display = "none";
     document.getElementById("kitchenSection").style.display = "block";
     loadPedidos();
-    setInterval(loadPedidos, 10000);
+    loadMesasLimpiar();
+    setInterval(() => { loadPedidos(); loadMesasLimpiar(); }, 10000);
 } else {
     document.getElementById("pinInput").addEventListener("keypress", e => { if (e.key === "Enter") loginPin(); });
 }
@@ -134,7 +140,8 @@ async function loginPin() {
     document.getElementById("loginSection").style.display = "none";
     document.getElementById("kitchenSection").style.display = "block";
     loadPedidos();
-    setInterval(loadPedidos, 10000);
+    loadMesasLimpiar();
+    setInterval(() => { loadPedidos(); loadMesasLimpiar(); }, 10000);
 }
 
 function showError(msg) {
@@ -205,6 +212,32 @@ async function loadPedidos() {
 async function updatePedido(id, nuevoEstado) {
     await sb.from("pedidos").update({ estado: nuevoEstado }).eq("id", id);
     loadPedidos();
+}
+
+async function loadMesasLimpiar() {
+    if (!empresaId) return;
+    const { data: mesas } = await sb.from("mesas").select("*").eq("empresa_id", empresaId);
+    const limpieza = (mesas || []).filter(m => m.estado === "limpieza");
+    const section = document.getElementById("mesasSection");
+    const container = document.getElementById("mesasLimpiar");
+    if (limpieza.length === 0) {
+        section.style.display = "none";
+        return;
+    }
+    section.style.display = "block";
+    container.innerHTML = limpieza.map(m => `
+        <div style="background:#161b22;border:2px solid #f0e68c;border-radius:12px;padding:16px;text-align:center;min-width:140px;animation:glow 2s infinite">
+            <div style="font-size:32px;margin-bottom:8px">🧹</div>
+            <div style="font-size:18px;font-weight:bold;color:#f0e68c">Mesa #${m.numero}</div>
+            <div style="color:#8b949e;font-size:12px;margin:4px 0">${m.capacidad || '?'} personas</div>
+            <button class="btn btn-listo" style="margin-top:10px;width:100%" onclick="limpiarMesa('${m.id}')">✔️ Lista</button>
+        </div>
+    `).join("");
+}
+
+async function limpiarMesa(mesaId) {
+    await sb.from("mesas").update({ estado: "disponible" }).eq("id", mesaId);
+    loadMesasLimpiar();
 }
 </script>
 </body>

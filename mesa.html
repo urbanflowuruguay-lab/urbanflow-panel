@@ -49,6 +49,10 @@
         .estado-pedido p { color: var(--text2); font-size: 14px; line-height: 1.6; }
         .estado-pedido .volver { margin-top: 24px; background: var(--bg3); color: var(--text); border: none; border-radius: 8px; padding: 10px 24px; cursor: pointer; font-size: 14px; font-family: var(--font); }
         .empty { text-align: center; padding: 40px 20px; color: var(--muted); }
+        .cleaning-icon { font-size: 64px; animation: cleanBounce 1.5s ease-in-out infinite; }
+        .cleaning-spinner { width: 48px; height: 48px; border: 4px solid var(--border); border-top: 4px solid var(--accent); border-radius: 50%; margin: 16px auto; animation: spin 1s linear infinite; }
+        @keyframes cleanBounce { 0%,100% { transform: translateY(0) rotate(0deg); } 25% { transform: translateY(-10px) rotate(-10deg); } 50% { transform: translateY(0) rotate(0deg); } 75% { transform: translateY(-5px) rotate(10deg); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
         .precio-original { text-decoration: line-through; color: var(--muted); font-size: 12px; margin-right: 4px; }
 
         /* ===== PORTADA ===== */
@@ -98,6 +102,9 @@
     <div style="margin-top:24px;display:flex;gap:12px">
         <button class="volver" onclick="volverCarta()">Volver a la carta</button>
         <button class="volver" onclick="showRating()" style="background:var(--accent2);color:white">Calificar ⭐</button>
+    </div>
+    <div style="margin-top:16px">
+        <button class="volver" onclick="finalizarMesa()" style="background:#da3633;color:white;font-size:13px;padding:10px 20px">FINALIZAR Y DEJAR MESA</button>
     </div>
 </div>
 
@@ -319,6 +326,25 @@ async function init() {
             document.getElementById("mainContent").innerHTML = '<div class="empty" style="padding-top:80px"><p>Mesa no encontrada</p></div>';
             return;
         }
+
+        if (mesaData.estado === "limpieza") {
+            document.getElementById("portada").style.display = "none";
+            document.getElementById("mainContent").innerHTML = `
+                <div style="text-align:center;padding:60px 20px;animation:fadeIn 0.5s ease">
+                    <div class="cleaning-icon">🧹</div>
+                    <div class="cleaning-spinner"></div>
+                    <h2 style="margin:20px 0 10px;font-family:var(--font-title)">Mesa en preparacion</h2>
+                    <p style="color:var(--text2);font-size:15px;line-height:1.6;max-width:320px;margin:0 auto">
+                        Tu mesa esta siendo preparada.<br>
+                        En unos momentos estara lista.<br>
+                        <strong style="color:var(--accent)">¡Gracias por tu paciencia!</strong>
+                    </p>
+                </div>`;
+            document.body.style.background = "var(--bg1)";
+            setTimeout(() => location.reload(), 10000);
+            return;
+        }
+
         const tpl = empresaData.carta_template || "dark_elegance";
         applyTheme(tpl);
 
@@ -546,6 +572,27 @@ async function enviarPedido() {
 function volverCarta() {
     document.getElementById("estadoPedido").classList.remove("show");
     renderProductos(document.querySelector(".cat-btn.active")?.textContent === "Todos" ? null : document.querySelector(".cat-btn.active")?.textContent);
+}
+
+async function finalizarMesa() {
+    if (!confirm("¿Seguro que queres dejar la mesa? La mesa pasara a estado de limpieza.")) return;
+    try {
+        await sb.from("mesas").update({ estado: "limpieza" }).eq("id", mesaData.id);
+        document.getElementById("estadoPedido").classList.remove("show");
+        document.getElementById("mainContent").innerHTML = `
+            <div style="text-align:center;padding:60px 20px;animation:fadeIn 0.5s ease">
+                <div style="font-size:64px;animation:cleanBounce 1.5s ease-in-out infinite">🧹</div>
+                <div class="cleaning-spinner"></div>
+                <h2 style="margin:20px 0 10px;font-family:var(--font-title)">¡Gracias!</h2>
+                <p style="color:var(--text2);font-size:15px;line-height:1.6;max-width:320px;margin:0 auto">
+                    La mesa esta en proceso de limpieza.<br>
+                    Pronto estara lista para los proximos clientes.
+                </p>
+            </div>`;
+        document.body.style.background = "var(--bg1)";
+    } catch (e) {
+        alert("Error: " + e.message);
+    }
 }
 
 const RATING_CATS = [
