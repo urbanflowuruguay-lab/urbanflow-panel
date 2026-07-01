@@ -144,6 +144,7 @@
         <div class="tab" id="tab_mesas" onclick="switchTab('mesas')" style="display:none">Mesas</div>
         <div class="tab" id="tab_productos" onclick="switchTab('productos')">Carta</div>
         <div class="tab" id="tab_usuarios" onclick="switchTab('usuarios')">Usuarios</div>
+        <div class="tab" id="tab_personal" onclick="switchTab('personal')">Control Personal</div>
         <div class="tab" id="tab_perfil" onclick="switchTab('perfil')">Perfil</div>
     </div>
 
@@ -242,6 +243,7 @@ function switchTab(tab) {
     else if (tab === "mesas") loadMesas();
     else if (tab === "productos") loadProductos();
     else if (tab === "usuarios") loadUsuarios();
+    else if (tab === "personal") loadPersonal();
     else if (tab === "perfil") loadPerfil();
 }
 
@@ -374,9 +376,35 @@ async function loadPedidos() {
 
 const PALABRAS_SECRETAS = ["girasol", "manzana", "tornado", "elefante", "cactus", "mariposa", "avion", "sol", "luna", "estrella", "rayo", "nube", "rio", "montana", "flor", "pez", "piedra", "fuego", "viento", "llave", "cofre", "perla", "diamante", "corazon", "flecha", "escudo", "castillo", "bruja", "dragon", "tesoro"];
 
-function asignarDelivery(id) {
-    const palabra = PALABRAS_SECRETAS[Math.floor(Math.random() * PALABRAS_SECRETAS.length)].toUpperCase();
-    sb.from("pedidos").update({ estado: "en_camino", palabra_secreta: palabra }).eq("id", id).then(() => loadPedidos());
+function asignarDelivery(pedidoId) {
+    sb.from("usuarios_empresa").select("*").eq("empresa_id", empresaId).eq("rol", "delivery").eq("activo", true).then(({ data }) => {
+        const deliverys = data || [];
+        if (deliverys.length === 0) {
+            alert("No hay deliverys activos. Crealos en Usuarios.");
+            return;
+        }
+        const palabra = PALABRAS_SECRETAS[Math.floor(Math.random() * PALABRAS_SECRETAS.length)].toUpperCase();
+        let html = `<div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:300;display:flex;align-items:center;justify-content:center" onclick="if(event.target===this)this.remove()">
+            <div style="background:#161b22;border:1px solid #30363d;border-radius:12px;padding:20px;width:90%;max-width:360px">
+                <h3 style="color:#f0883e;margin-bottom:12px">Asignar Delivery</h3>
+                <p style="color:#8b949e;font-size:13px;margin-bottom:12px">Palabra secreta: <strong style="color:#f0e68c">${palabra}</strong></p>
+                <div id="deliveryList">${deliverys.map(d => `
+                    <div style="padding:12px;background:#0d1117;border:1px solid #30363d;border-radius:8px;margin-bottom:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="confirmarAsignar('${pedidoId}','${d.id}','${d.nombre}','${palabra}',this)">
+                        <span style="color:#c9d1d9;font-weight:600">🚴 ${d.nombre}</span>
+                        <span style="color:#58a6ff;font-size:12px">Asignar →</span>
+                    </div>
+                `).join("")}</div>
+            </div>
+        </div>`;
+        document.body.insertAdjacentHTML("beforeend", html);
+    });
+}
+
+function confirmarAsignar(pedidoId, workerId, workerName, palabra, el) {
+    sb.from("pedidos").update({ estado: "en_camino", palabra_secreta: palabra, worker_id: workerId, worker_nombre: workerName }).eq("id", pedidoId).then(() => {
+        el.closest("[style*='fixed']").remove();
+        loadPedidos();
+    });
 }
 
 async function updatePedido(id, nuevoEstado) {
@@ -841,6 +869,80 @@ async function deleteProducto(id, nombre) {
 }
 
 let categoriasEmpresa = [];
+
+async function loadPersonal() {
+    const [pedRes, usrRes] = await Promise.all([
+        sb.from("pedidos").select("*").eq("empresa_id", empresaId).order("created_at", { ascending: false }).limit(200),
+        sb.from("usuarios_empresa").select("*").eq("empresa_id", empresaId).eq("activo", true)
+    ]);
+    const pedidos = pedRes.data || [];
+    const usuarios = usrRes.data || [];
+    const content = document.getElementById("content");
+
+    const workerStats = {};
+    usuarios.forEach(u => {
+        workerStats[u.id] = { nombre: u.nombre, rol: u.rol, pedidos: 0, tiempos: [] };
+    });
+
+    pedidos.forEach(p => {
+        if (p.worker_id && workerStats[p.worker_id]) {
+            workerStats[p.worker_id].pedidos++;
+            if (p.started_at && p.created_at) {
+                const tPrep = (new Date(p.ready_at || Date.now()) - new Date(p.started_at)) / 60000;
+                workerStats[p.worker_id].tiempos.push(tPrep);
+            }
+        }
+    });
+
+    let html = `<h3 style="color:#58a6ff;margin-bottom:16px">Control de Personal</h3>`;
+
+    html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:24px">`;
+    Object.values(workerStats).forEach(w => {
+        const promedio = w.tiempos.length > 0 ? Math.round(w.tiempos.reduce((a,b) => a+b, 0) / w.tiempos.length) : 0;
+        const color = w.rol === "cocina" ? "#1f6feb" : w.rol === "delivery" ? "#f0883e" : "#8b949e";
+        html += `<div class="card" style="border-left:3px solid ${color}">
+            <div style="font-weight:600;color:#c9d1d9">${w.nombre}</div>
+            <div style="color:#8b949e;font-size:12px;text-transform:uppercase">${w.rol}</div>
+            <div style="margin-top:8px;font-size:24px;font-weight:bold;color:#58a6ff">${w.pedidos}</div>
+            <div style="color:#8b949e;font-size:11px">pedidos hoy</div>
+            ${promedio > 0 ? `<div style="color:#7ee787;font-size:13px;margin-top:4px">⏱ ${promedio} min promedio</div>` : ""}
+        </div>`;
+    });
+    html += `</div>`;
+
+    html += `<h3 style="color:#58a6ff;margin-bottom:12px">Ultimos pedidos</h3>`;
+    const recientes = pedidos.slice(0, 50);
+    if (recientes.length === 0) {
+        html += '<div class="empty"><p>Sin pedidos</p></div>';
+        content.innerHTML = html;
+        return;
+    }
+
+    html += `<table><thead><tr><th>#</th><th>Trabajador</th><th>Rol</th><th>Recibido</th><th>Inicio</th><th>Listo</th><th>Entregado</th><th>Tiempo</th></tr></thead><tbody>`;
+    recientes.forEach(p => {
+        const worker = p.worker_nombre || "—";
+        const rol = p.worker_id ? (workerStats[p.worker_id]?.rol || "—") : "—";
+        const t0 = p.created_at ? new Date(p.created_at).toLocaleTimeString("es-UY", {hour:"2-digit",minute:"2-digit"}) : "—";
+        const t1 = p.started_at ? new Date(p.started_at).toLocaleTimeString("es-UY", {hour:"2-digit",minute:"2-digit"}) : "—";
+        const t2 = p.ready_at ? new Date(p.ready_at).toLocaleTimeString("es-UY", {hour:"2-digit",minute:"2-digit"}) : "—";
+        const t3 = p.delivered_at ? new Date(p.delivered_at).toLocaleTimeString("es-UY", {hour:"2-digit",minute:"2-digit"}) : "—";
+        let tiempoTotal = "—";
+        if (p.created_at && (p.delivered_at || p.ready_at)) {
+            const fin = p.delivered_at || p.ready_at;
+            tiempoTotal = Math.round((new Date(fin) - new Date(p.created_at)) / 60000) + " min";
+        }
+        html += `<tr>
+            <td style="color:#58a6ff">#${p.id.substring(0,6).toUpperCase()}</td>
+            <td>${worker}</td>
+            <td><span style="color:${rol==="cocina"?"#58a6ff":rol==="delivery"?"#f0883e":"#8b949e"}">${rol}</span></td>
+            <td>${t0}</td><td>${t1}</td><td>${t2}</td><td>${t3}</td>
+            <td style="color:#7ee787;font-weight:600">${tiempoTotal}</td>
+        </tr>`;
+    });
+    html += `</tbody></table>`;
+
+    content.innerHTML = html;
+}
 
 async function loadPerfil() {
     const { data } = await sb.from("empresas").select("*").eq("id", empresaId).single();
