@@ -598,22 +598,13 @@ async function loadProductos() {
             <div class="form-group"><label>Nombre *</label><input type="text" id="prodNombre" placeholder="Ej: Milanesa a la napolitana"></div>
             <div class="form-group"><label>Precio ($)</label><input type="number" id="prodPrecio"></div>
         </div>
-        <div class="form-row">
-            <div class="form-group"><label>Stock</label><input type="number" id="prodStock" value="0"></div>
-            <div class="form-group"><label>Sub-categoria</label>
-                <select id="prodSubCategoria" style="width:100%;padding:8px 12px;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;font-size:13px">
-                    <option value="">Seleccionar...</option>
-                </select>
-                <input type="text" id="prodSubCategoriaCustom" placeholder="O escribir nueva..." style="width:100%;padding:8px 12px;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;font-size:13px;margin-top:6px">
-            </div>
-        </div>
-        <div class="form-group"><label>Categoria principal *</label>
+        <div class="form-group"><label>Categoria *</label>
             <input type="text" id="prodCategoria" placeholder="Ej: Carnes, Pizzas, Bebidas..." oninput="onCategoriaInput()" style="width:100%;padding:8px 12px;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;font-size:13px">
             <div id="catSuggestions" style="display:none;position:absolute;z-index:10;background:#161b22;border:1px solid #30363d;border-radius:6px;max-height:120px;overflow-y:auto;width:calc(100% - 32px)"></div>
         </div>
         <div id="otraCategoriaRow" style="display:none" class="form-group">
             <label style="display:flex;align-items:center;gap:6px;cursor:pointer;color:#c9d1d9">
-                <input type="checkbox" id="prodOtraCat" onchange="onOtraCatToggle()" style="accent-color:#58a6ff"> Este producto tambien esta en otra categoria
+                <input type="checkbox" id="prodOtraCat" onchange="onOtraCatToggle()" style="accent-color:#58a6ff"> Tambien esta en otra categoria
             </label>
             <input type="text" id="prodCategoria2" placeholder="Segunda categoria..." oninput="onCategoriaInput2()" style="width:100%;padding:8px 12px;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;font-size:13px;margin-top:6px;display:none">
             <div id="catSuggestions2" style="display:none;position:absolute;z-index:10;background:#161b22;border:1px solid #30363d;border-radius:6px;max-height:120px;overflow-y:auto;width:calc(100% - 32px)"></div>
@@ -630,7 +621,7 @@ async function loadProductos() {
         </div>
     </div>
     <table>
-        <thead><tr><th></th><th>Nombre</th><th>Categorias</th><th>Precio</th><th>Stock</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <thead><tr><th></th><th>Nombre</th><th>Categorias</th><th>Precio</th><th>Estado</th><th>Acciones</th></tr></thead>
         <tbody id="productosTable"></tbody>
     </table>`;
 
@@ -662,13 +653,12 @@ async function loadProductos() {
         const catsLabel = Array.isArray(cats) ? cats.join(', ') : cats;
         return `<tr>
         <td>${p.foto_url ? `<img src="${p.foto_url}" class="producto-img">` : '<div class="producto-img" style="display:flex;align-items:center;justify-content:center;color:#484f58">?</div>'}</td>
-        <td><strong>${p.nombre}</strong><br><small style="color:#8b949e">${catsLabel}</small></td>
-        <td>${p.sub_categoria || '<span style="color:#484f58">—</span>'}</td>
+        <td><strong>${p.nombre}</strong></td>
+        <td><small style="color:#8b949e">${catsLabel}</small></td>
         <td>$${(p.precio || 0).toFixed(0)}</td>
-        <td>${p.stock}</td>
         <td><button class="toggle-activo ${p.activo ? 'on' : 'off'}" onclick="toggleProducto('${p.id}',${p.activo})"></button></td>
         <td class="actions">
-            <button class="btn btn-secondary btn-sm" onclick="editProducto('${p.id}','${(p.nombre||'').replace(/'/g,"\\'")}','${p.precio||0}','${p.stock||0}','${(p.descripcion||'').replace(/'/g,"\\'")}','${JSON.stringify(cats).replace(/'/g,"\\'").replace(/"/g,"&quot;")}','${p.foto_url||''}','${(p.sub_categoria||'').replace(/'/g,"\\'")}')">Editar</button>
+            <button class="btn btn-secondary btn-sm" onclick="editProducto('${p.id}','${(p.nombre||'').replace(/'/g,"\\'")}','${p.precio||0}','${(p.descripcion||'').replace(/'/g,"\\'")}','${JSON.stringify(cats).replace(/'/g,"\\'").replace(/"/g,"&quot;")}','${p.foto_url||''}')">Editar</button>
             <button class="btn btn-danger btn-sm" onclick="deleteProducto('${p.id}','${(p.nombre||'').replace(/'/g,"\\'")}')">Borrar</button>
         </td>
     </tr>`}).join("");
@@ -680,7 +670,6 @@ function showAddProducto() {
     document.getElementById("prodId").value = "";
     document.getElementById("prodNombre").value = "";
     document.getElementById("prodPrecio").value = "";
-    document.getElementById("prodStock").value = "0";
     document.getElementById("prodCategoria").value = "";
     document.getElementById("otraCategoriaRow").style.display = "none";
     document.getElementById("prodOtraCat").checked = false;
@@ -688,24 +677,20 @@ function showAddProducto() {
     document.getElementById("prodCategoria2").value = "";
     document.getElementById("catSuggestions").style.display = "none";
     document.getElementById("catSuggestions2").style.display = "none";
-    document.getElementById("prodSubCategoria").innerHTML = '<option value="">Seleccionar...</option>';
-    document.getElementById("prodSubCategoriaCustom").value = "";
     document.getElementById("prodDescripcion").value = "";
     document.getElementById("prodFoto").value = "";
     document.getElementById("prodFotoPreview").style.display = "none";
     document.getElementById("prodFotoFile").value = "";
 }
 
-function editProducto(id, nombre, precio, stock, desc, cat, foto, subCat) {
+function editProducto(id, nombre, precio, desc, cat, foto) {
     document.getElementById("formProducto").style.display = "block";
     document.getElementById("formProductoTitle").textContent = "Editar Producto";
     document.getElementById("prodId").value = id;
     document.getElementById("prodNombre").value = nombre;
     document.getElementById("prodPrecio").value = precio;
-    document.getElementById("prodStock").value = stock;
     document.getElementById("prodDescripcion").value = desc;
     document.getElementById("prodFoto").value = foto;
-    document.getElementById("prodSubCategoriaCustom").value = "";
     if (foto) {
         document.getElementById("prodFotoPreview").src = foto;
         document.getElementById("prodFotoPreview").style.display = "block";
@@ -723,15 +708,6 @@ function editProducto(id, nombre, precio, stock, desc, cat, foto, subCat) {
     } else {
         document.getElementById("prodOtraCat").checked = false;
         document.getElementById("prodCategoria2").style.display = "none";
-    }
-    updateSubcatsDropdown(catsArr);
-    const select = document.getElementById("prodSubCategoria");
-    let found = false;
-    for (let opt of select.options) {
-        if (opt.value === subCat) { opt.selected = true; found = true; break; }
-    }
-    if (!found && subCat) {
-        document.getElementById("prodSubCategoriaCustom").value = subCat;
     }
 }
 
@@ -777,25 +753,6 @@ function onOtraCatToggle() {
     if (!checked) document.getElementById("prodCategoria2").value = "";
 }
 
-function updateSubcatsDropdown(catsArr) {
-    const select = document.getElementById("prodSubCategoria");
-    const currentVal = select.value;
-    const allSubcats = new Set();
-    categoriasEmpresa.forEach(c => {
-        if (catsArr.includes(c.nombre) && c.subcategorias) {
-            c.subcategorias.forEach(s => allSubcats.add(s));
-        }
-    });
-    select.innerHTML = '<option value="">Seleccionar...</option>';
-    [...allSubcats].sort().forEach(s => {
-        const opt = document.createElement("option");
-        opt.value = s;
-        opt.textContent = s;
-        if (s === currentVal) opt.selected = true;
-        select.appendChild(opt);
-    });
-}
-
 async function saveProducto() {
     const id = document.getElementById("prodId").value;
     const cat1 = document.getElementById("prodCategoria").value.trim();
@@ -805,16 +762,11 @@ async function saveProducto() {
         const cat2 = document.getElementById("prodCategoria2").value.trim();
         if (cat2 && cat2 !== cat1) cats.push(cat2);
     }
-    const subCatCustom = document.getElementById("prodSubCategoriaCustom").value.trim();
-    const subCatSelect = document.getElementById("prodSubCategoria").value;
-    const subCategoria = subCatCustom || subCatSelect;
     const data = {
         empresa_id: empresaId,
         nombre: document.getElementById("prodNombre").value.trim(),
         precio: parseFloat(document.getElementById("prodPrecio").value) || 0,
-        stock: parseInt(document.getElementById("prodStock").value) || 0,
         categorias: cats,
-        sub_categoria: subCategoria,
         descripcion: document.getElementById("prodDescripcion").value.trim(),
         foto_url: document.getElementById("prodFoto").value.trim(),
         activo: true
