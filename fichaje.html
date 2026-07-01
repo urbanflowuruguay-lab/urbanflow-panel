@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fichaje - UrbanFlow</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0d1117; color: #c9d1d9; min-height: 100vh; }
+        .container { max-width: 500px; margin: 0 auto; padding: 20px 16px; }
+        .clock { text-align: center; padding: 30px 0; }
+        .clock-time { font-size: 56px; font-weight: 700; color: #58a6ff; font-variant-numeric: tabular-nums; }
+        .clock-date { font-size: 14px; color: #8b949e; margin-top: 4px; }
+        .login-section { max-width: 400px; margin: 60px auto; padding: 0 16px; }
+        .login-section h2 { color: #58a6ff; margin-bottom: 20px; text-align: center; }
+        .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; color: #8b949e; font-size: 12px; margin-bottom: 4px; text-transform: uppercase; }
+        .form-group input { width: 100%; padding: 12px; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: #c9d1d9; font-size: 16px; }
+        .form-group input:focus { border-color: #58a6ff; outline: none; }
+        .btn-primary { background: #1f6feb; color: white; width: 100%; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: 600; }
+        .fichar-btn { width: 180px; height: 180px; border-radius: 50%; border: none; font-size: 22px; font-weight: 700; cursor: pointer; margin: 20px auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: all 0.2s; }
+        .fichar-btn:active { transform: scale(0.95); }
+        .fichar-btn.entrada { background: #238636; color: white; box-shadow: 0 0 30px rgba(35,134,54,0.3); }
+        .fichar-btn.salida { background: #da3633; color: white; box-shadow: 0 0 30px rgba(218,54,51,0.3); }
+        .fichar-btn.entrada:active { box-shadow: 0 0 50px rgba(35,134,54,0.6); }
+        .fichar-btn.salida:active { box-shadow: 0 0 50px rgba(218,54,51,0.6); }
+        .status { text-align: center; margin: 16px 0; }
+        .status-badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+        .badge-fuera { background: #da363333; color: #f85149; }
+        .badge-adentro { background: #23863633; color: #7ee787; }
+        .worker-name { text-align: center; font-size: 20px; font-weight: 600; color: #c9d1d9; margin-bottom: 4px; }
+        .worker-role { text-align: center; font-size: 13px; color: #8b949e; margin-bottom: 8px; text-transform: uppercase; }
+        .historial { margin-top: 24px; }
+        .historial h3 { color: #58a6ff; font-size: 16px; margin-bottom: 12px; }
+        .historial-list { display: flex; flex-direction: column; gap: 8px; }
+        .hist-item { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .hist-fecha { color: #8b949e; font-size: 12px; }
+        .hist-horas { font-weight: 700; font-size: 16px; }
+        .hist-horas.trabajando { color: #7ee787; animation: pulse 2s infinite; }
+        .hist-horas.completado { color: #58a6ff; }
+        .hist-detail { display: flex; gap: 12px; font-size: 12px; color: #8b949e; }
+        .hist-arrow { color: #484f58; }
+        .stats-row { display: flex; gap: 8px; margin-bottom: 16px; }
+        .stat-card { flex: 1; background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px; text-align: center; }
+        .stat-card .num { font-size: 20px; font-weight: 700; }
+        .stat-card .label { font-size: 11px; color: #8b949e; text-transform: uppercase; }
+        .btn-cerrar { background: #da3633; color: white; padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        .empty { text-align: center; padding: 30px; color: #484f58; }
+    </style>
+</head>
+<body>
+
+<div id="loginSection" class="login-section">
+    <h2>Fichaje</h2>
+    <div class="card">
+        <div class="form-group">
+            <label>Nombre</label>
+            <input type="text" id="loginNombre" placeholder="Tu nombre">
+        </div>
+        <div class="form-group">
+            <label>Contrasena</label>
+            <input type="password" id="pinInput" maxlength="4" placeholder="****" inputmode="numeric">
+        </div>
+        <button class="btn-primary" onclick="loginPin()">Entrar</button>
+        <p id="loginError" style="color:#da3633;text-align:center;margin-top:12px;display:none"></p>
+    </div>
+</div>
+
+<div id="fichajeSection" style="display:none">
+    <div class="container">
+        <div class="header">
+            <div>
+                <div class="worker-name" id="workerName"></div>
+                <div class="worker-role" id="workerRole"></div>
+            </div>
+            <button class="btn-cerrar" onclick="logout()">Salir</button>
+        </div>
+
+        <div class="clock">
+            <div class="clock-time" id="clockTime">00:00:00</div>
+            <div class="clock-date" id="clockDate"></div>
+        </div>
+
+        <div class="status">
+            <span class="status-badge" id="statusBadge"></span>
+        </div>
+
+        <div style="display:flex;justify-content:center">
+            <button class="fichar-btn" id="ficharBtn" onclick="fichar()">
+                <span id="ficharLabel"></span>
+                <span id="ficharIcon" style="font-size:32px"></span>
+            </button>
+        </div>
+
+        <div class="stats-row" id="statsRow" style="display:none">
+            <div class="stat-card"><div class="num" style="color:#7ee787" id="statHoy">0h</div><div class="label">Hoy</div></div>
+            <div class="stat-card"><div class="num" style="color:#58a6ff" id="statSemana">0h</div><div class="label">Semana</div></div>
+            <div class="stat-card"><div class="num" style="color:#f0883e" id="statMes">0h</div><div class="label">Mes</div></div>
+        </div>
+
+        <div class="historial">
+            <h3>Historial reciente</h3>
+            <div class="historial-list" id="historialList">
+                <div class="empty">Cargando...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://eyfgkopaamnkprzpwocz.supabase.co";
+const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5Zmdrb3BhYW1ua3ByenB3b2N6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2MTk0ODMsImV4cCI6MjA5NDE5NTQ4M30.bXkq4Ks3p2yb2SQH76__8jXhmM5Thi2izIL5UPkKa0I";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+const params = new URLSearchParams(window.location.search);
+let empresaId = params.get("empresa") || "";
+let usuarioData = null;
+let fichajeActual = null;
+
+// Clock
+function updateClock() {
+    const now = new Date();
+    document.getElementById("clockTime").textContent = now.toLocaleTimeString("es-UY");
+    document.getElementById("clockDate").textContent = now.toLocaleDateString("es-UY", { weekday: "long", day: "numeric", month: "long" });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+document.getElementById("pinInput").addEventListener("keypress", e => { if (e.key === "Enter") loginPin(); });
+
+async function loginPin() {
+    const nombre = document.getElementById("loginNombre").value.trim();
+    const pin = document.getElementById("pinInput").value.trim();
+    if (!nombre) { showError("Ingresa tu nombre"); return; }
+    if (!pin) { showError("Ingresa tu contrasena"); return; }
+    const { data: usuarios } = await sb.from("usuarios_empresa").select("*, empresas(id,nombre)").eq("pin", pin).eq("activo", true);
+    if (!usuarios || usuarios.length === 0) { showError("Contrasena incorrecta"); return; }
+    const usr = usuarios.find(u => u.nombre && u.nombre.toLowerCase() === nombre.toLowerCase()) || usuarios[0];
+    if (usr.nombre && usr.nombre.toLowerCase() !== nombre.toLowerCase()) { showError("Nombre no registrado"); return; }
+    empresaId = usr.empresa_id;
+    usuarioData = usr;
+    document.getElementById("workerName").textContent = usr.nombre;
+    document.getElementById("workerRole").textContent = usr.rol;
+    document.getElementById("loginSection").style.display = "none";
+    document.getElementById("fichajeSection").style.display = "block";
+    await checkFichajeActual();
+    await loadHistorial();
+}
+
+function showError(msg) {
+    const el = document.getElementById("loginError");
+    el.textContent = msg;
+    el.style.display = "block";
+}
+
+async function checkFichajeActual() {
+    const { data } = await sb.from("fichajes").select("*").eq("usuario_id", usuarioData.id).is("salida", null).order("entrada", { ascending: false }).limit(1);
+    fichajeActual = data && data.length > 0 ? data[0] : null;
+    updateUI();
+}
+
+function updateUI() {
+    const btn = document.getElementById("ficharBtn");
+    const label = document.getElementById("ficharLabel");
+    const icon = document.getElementById("ficharIcon");
+    const badge = document.getElementById("statusBadge");
+
+    if (fichajeActual) {
+        btn.className = "fichar-btn salida";
+        label.textContent = "MARCAR";
+        icon.textContent = ".salida";
+        badge.className = "status-badge badge-adentro";
+        badge.textContent = "🟢 Adentro desde " + new Date(fichajeActual.entrada).toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" });
+    } else {
+        btn.className = "fichar-btn entrada";
+        label.textContent = "MARCAR";
+        icon.textContent = ".entrada";
+        badge.className = "status-badge badge-fuera";
+        badge.textContent = "🔴 Fuera";
+    }
+}
+
+async function fichar() {
+    const btn = document.getElementById("ficharBtn");
+    btn.disabled = true;
+
+    if (fichajeActual) {
+        // Marcar salida
+        await sb.from("fichajes").update({ salida: new Date().toISOString() }).eq("id", fichajeActual.id);
+        fichajeActual = null;
+    } else {
+        // Marcar entrada
+        const { data } = await sb.from("fichajes").insert({
+            empresa_id: empresaId,
+            usuario_id: usuarioData.id,
+            nombre: usuarioData.nombre,
+            entrada: new Date().toISOString()
+        }).select();
+        fichajeActual = data && data.length > 0 ? data[0] : null;
+    }
+
+    updateUI();
+    await loadHistorial();
+    btn.disabled = false;
+}
+
+async function loadHistorial() {
+    if (!usuarioData) return;
+    const { data: fichajes } = await sb.from("fichajes").select("*").eq("usuario_id", usuarioData.id).order("entrada", { ascending: false }).limit(30);
+
+    const list = document.getElementById("historialList");
+    const items = fichajes || [];
+
+    if (items.length === 0) {
+        list.innerHTML = '<div class="empty">Sin historial</div>';
+        return;
+    }
+
+    // Calcular estadísticas
+    const now = new Date();
+    const hoy = now.toDateString();
+    const inicioSemana = new Date(now);
+    inicioSemana.setDate(now.getDate() - now.getDay());
+    inicioSemana.setHours(0, 0, 0, 0);
+    const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    let totalHoy = 0, totalSemana = 0, totalMes = 0;
+
+    items.forEach(f => {
+        if (!f.salida && !f.horas) return; // Skip active
+        const horas = parseFloat(f.horas) || 0;
+        const fecha = new Date(f.entrada);
+        if (fecha.toDateString() === hoy) totalHoy += horas;
+        if (fecha >= inicioSemana) totalSemana += horas;
+        if (fecha >= inicioMes) totalMes += horas;
+    });
+
+    document.getElementById("statHoy").textContent = totalHoy.toFixed(1) + "h";
+    document.getElementById("statSemana").textContent = totalSemana.toFixed(1) + "h";
+    document.getElementById("statMes").textContent = totalMes.toFixed(1) + "h";
+    document.getElementById("statsRow").style.display = "flex";
+
+    list.innerHTML = items.map(f => {
+        const fecha = new Date(f.entrada);
+        const fechaStr = fecha.toLocaleDateString("es-UY", { day: "numeric", month: "short" });
+        const entradaStr = fecha.toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" });
+        const esActivo = !f.salida;
+
+        if (esActivo) {
+            return `<div class="hist-item">
+                <div>
+                    <div class="hist-fecha">${fechaStr}</div>
+                    <div class="hist-detail">
+                        <span>Entrada: ${entradaStr}</span>
+                        <span class="hist-arrow">→</span>
+                        <span style="color:#7ee787">Trabajando...</span>
+                    </div>
+                </div>
+                <div class="hist-horas trabajando">🟢</div>
+            </div>`;
+        }
+
+        const salidaStr = new Date(f.salida).toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" });
+        const horas = parseFloat(f.horas) || 0;
+
+        return `<div class="hist-item">
+            <div>
+                <div class="hist-fecha">${fechaStr}</div>
+                <div class="hist-detail">
+                    <span>${entradaStr}</span>
+                    <span class="hist-arrow">→</span>
+                    <span>${salidaStr}</span>
+                </div>
+            </div>
+            <div class="hist-horas completado">${horas.toFixed(1)}h</div>
+        </div>`;
+    }).join("");
+}
+
+function logout() {
+    localStorage.removeItem("uf_fichaje_user_" + empresaId);
+    location.reload();
+}
+</script>
+</body>
+</html>
