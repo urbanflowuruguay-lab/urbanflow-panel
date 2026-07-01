@@ -582,11 +582,16 @@ async function deleteMesa(id, numero) {
 }
 
 async function loadProductos() {
-    const [{ data: productos }, { data: cats }] = await Promise.all([
+    console.log("=== loadProductos === empresaId:", empresaId);
+    const [prodRes, catsRes] = await Promise.all([
         sb.from("productos_empresa").select("*").eq("empresa_id", empresaId).order("created_at", { ascending: false }),
         sb.from("categorias_empresa").select("*").eq("empresa_id", empresaId).order("orden")
     ]);
-    categoriasEmpresa = cats || [];
+    if (prodRes.error) console.error("Error cargando productos:", prodRes.error);
+    if (catsRes.error) console.error("Error cargando categorias:", catsRes.error);
+    console.log("Productos:", prodRes.data?.length, "Categorias:", catsRes.data?.length);
+    const productos = prodRes.data || [];
+    categoriasEmpresa = catsRes.data || [];
     const content = document.getElementById("content");
     const isComida = empresaData?.rubro_tipo === "comida";
 
@@ -755,8 +760,13 @@ function onOtraCatToggle() {
 }
 
 async function saveProducto() {
+    console.log("=== saveProducto INICIO ===");
     const id = document.getElementById("prodId").value;
+    const nombre = document.getElementById("prodNombre").value.trim();
+    const precio = document.getElementById("prodPrecio").value;
     const cat1 = document.getElementById("prodCategoria").value.trim();
+    console.log("id:", id, "nombre:", nombre, "precio:", precio, "cat1:", cat1, "empresaId:", empresaId);
+    if (!nombre) { alert("Nombre es obligatorio"); return; }
     if (!cat1) { alert("Ingresa una categoria"); return; }
     const cats = [cat1];
     if (document.getElementById("prodOtraCat").checked) {
@@ -765,29 +775,39 @@ async function saveProducto() {
     }
     const data = {
         empresa_id: empresaId,
-        nombre: document.getElementById("prodNombre").value.trim(),
-        precio: parseFloat(document.getElementById("prodPrecio").value) || 0,
+        nombre: nombre,
+        precio: parseFloat(precio) || 0,
         categorias: cats,
         descripcion: document.getElementById("prodDescripcion").value.trim(),
         foto_url: document.getElementById("prodFoto").value.trim(),
         activo: true
     };
-    if (!data.nombre) { alert("Nombre es obligatorio"); return; }
+    console.log("Data a guardar:", JSON.stringify(data));
 
     for (const catName of cats) {
         const exists = categoriasEmpresa.find(c => c.nombre === catName);
         if (!exists) {
-            await sb.from("categorias_empresa").insert({ empresa_id: empresaId, nombre: catName, icono: "📌", subcategorias: [] });
+            console.log("Creando categoria:", catName);
+            const { error: catErr } = await sb.from("categorias_empresa").insert({ empresa_id: empresaId, nombre: catName, icono: "📌", subcategorias: [] });
+            if (catErr) console.error("Error creando categoria:", catErr);
         }
     }
 
+    let result;
     if (id) {
-        await sb.from("productos_empresa").update(data).eq("id", id);
+        result = await sb.from("productos_empresa").update(data).eq("id", id);
     } else {
-        await sb.from("productos_empresa").insert(data);
+        result = await sb.from("productos_empresa").insert(data);
     }
-    const { data: updated } = await sb.from("categorias_empresa").select("*").eq("empresa_id", empresaId).order("orden");
-    categoriasEmpresa = updated || [];
+
+    if (result.error) {
+        console.error("Error guardando producto:", result.error);
+        alert("Error: " + result.error.message);
+        return;
+    }
+
+    console.log("Producto guardado OK:", result.data);
+    alert("Producto guardado");
     cancelProducto();
     loadProductos();
 }
