@@ -171,14 +171,14 @@ function updateUI() {
 
     if (fichajeActual) {
         btn.className = "fichar-btn salida";
-        label.textContent = "MARCAR";
-        icon.textContent = ".salida";
+        label.textContent = "SALIDA";
+        icon.textContent = "🔴";
         badge.className = "status-badge badge-adentro";
         badge.textContent = "🟢 Adentro desde " + new Date(fichajeActual.entrada).toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" });
     } else {
         btn.className = "fichar-btn entrada";
-        label.textContent = "MARCAR";
-        icon.textContent = ".entrada";
+        label.textContent = "ENTRADA";
+        icon.textContent = "🟢";
         badge.className = "status-badge badge-fuera";
         badge.textContent = "🔴 Fuera";
     }
