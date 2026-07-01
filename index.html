@@ -47,6 +47,8 @@
         .badge-recibido { background: #1f6feb; color: #79c0ff; }
         .badge-preparando { background: #9e6a03; color: #f0e68c; }
         .badge-listo { background: #238636; color: #7ee787; }
+        .badge-en_camino { background: #f0883e; color: #ffa657; }
+        .badge-entregado { background: #238636; color: #7ee787; }
         .badge-cancelado { background: #da3633; color: #ffa198; }
         .badge-pendiente { background: #9e6a03; color: #f0e68c; }
         .badge-confirmada { background: #238636; color: #7ee787; }
@@ -317,7 +319,7 @@ async function loadPedidos() {
     refreshBadges();
 
     const content = document.getElementById("content");
-    const filters = ["todos", "recibido", "preparando", "listo", "cancelado"];
+    const filters = ["todos", "recibido", "preparando", "listo", "en_camino", "entregado", "cancelado"];
 
     let html = `<div class="filter-bar">
         ${filters.map(f => `<button class="filter-btn ${pedidoFilter === f ? 'active' : ''}" onclick="pedidoFilter='${f}';loadPedidos()">${f === "todos" ? "Todos" : f.charAt(0).toUpperCase() + f.slice(1)}</button>`).join("")}
@@ -332,11 +334,14 @@ async function loadPedidos() {
         return;
     }
 
-    const colores = { recibido: "badge-recibido", preparando: "badge-preparando", listo: "badge-listo", cancelado: "badge-cancelado" };
+    const colores = { recibido: "badge-recibido", preparando: "badge-preparando", listo: "badge-listo", en_camino: "badge-en_camino", entregado: "badge-entregado", cancelado: "badge-cancelado" };
 
     html += filtered.map(p => {
         const fecha = p.created_at ? new Date(p.created_at).toLocaleString("es-UY") : "";
         const shortId = p.id.substring(0, 8).toUpperCase();
+        let items = [];
+        try { items = typeof p.items === "string" ? JSON.parse(p.items) : (p.items || []); } catch(e) {}
+        const itemsHtml = items.map(i => `${i.cantidad || 1}x ${i.nombre || i}`).join(", ");
         let acciones = "";
         if (p.estado === "recibido") {
             acciones = `<button class="btn btn-primary btn-sm" onclick="updatePedido('${p.id}','preparando')">Preparar</button>
@@ -344,22 +349,34 @@ async function loadPedidos() {
         } else if (p.estado === "preparando") {
             acciones = `<button class="btn btn-success btn-sm" onclick="updatePedido('${p.id}','listo')">Listo</button>
                         <button class="btn btn-danger btn-sm" onclick="updatePedido('${p.id}','cancelado')">Cancelar</button>`;
+        } else if (p.estado === "listo") {
+            acciones = `<button class="btn btn-primary btn-sm" onclick="asignarDelivery('${p.id}')">🚴 Asignar Delivery</button>`;
         }
+        const deliveryInfo = p.delivery_nombre ? `<div style="color:#58a6ff;font-size:12px;margin-top:4px">🚴 ${p.delivery_nombre}</div>` : "";
+        const secretaInfo = p.palabra_secreta ? `<div style="color:#f0883e;font-size:12px;margin-top:4px">🔑 Secreto: <strong>${p.palabra_secreta}</strong></div>` : "";
         return `<div class="pedido-card">
             <div class="pedido-header">
                 <span class="pedido-id">#${shortId}</span>
                 <span class="badge-status ${colores[p.estado] || ''}">${p.estado.toUpperCase()}</span>
             </div>
-            <div class="pedido-items">${p.notas || "Sin notas"} | ${p.tipo_entrega || "Retiro"}</div>
-            <div style="display:flex;justify-content:space-between;align-items:center">
+            <div class="pedido-items" style="font-size:13px;color:#8b949e">${itemsHtml}</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
                 <span class="pedido-total">$${(p.total || 0).toFixed(0)}</span>
                 <div class="actions">${acciones}</div>
             </div>
-            <div style="color:#484f58;font-size:12px;margin-top:4px">${fecha}</div>
+            ${deliveryInfo}${secretaInfo}
+            <div style="color:#484f58;font-size:11px;margin-top:4px">${p.notas || ""} | ${p.tipo_entrega || "Retiro"} | ${fecha}</div>
         </div>`;
     }).join("");
 
     content.innerHTML = html;
+}
+
+const PALABRAS_SECRETAS = ["girasol", "manzana", "tornado", "elefante", "cactus", "mariposa", "avion", "sol", "luna", "estrella", "rayo", "nube", "rio", "montana", "flor", "pez", "piedra", "fuego", "viento", "llave", "cofre", "perla", "diamante", "corazon", "flecha", "escudo", "castillo", "bruja", "dragon", "tesoro"];
+
+function asignarDelivery(id) {
+    const palabra = PALABRAS_SECRETAS[Math.floor(Math.random() * PALABRAS_SECRETAS.length)].toUpperCase();
+    sb.from("pedidos").update({ estado: "en_camino", palabra_secreta: palabra }).eq("id", id).then(() => loadPedidos());
 }
 
 async function updatePedido(id, nuevoEstado) {
