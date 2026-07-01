@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Caja - UrbanFlow</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0d1117; color: #c9d1d9; min-height: 100vh; }
+        .header { background: #161b22; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; position: sticky; top: 0; z-index: 100; }
+        .header h1 { font-size: 16px; color: #58a6ff; }
+        .container { padding: 12px; max-width: 600px; margin: 0 auto; padding-bottom: 80px; }
+        .pedido-card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+        .pedido-card.sin-pagar { border-color: #f0883e; animation: glow-orange 1.5s infinite; }
+        @keyframes glow-orange { 0%, 100% { box-shadow: 0 0 5px rgba(240,136,62,0.3); } 50% { box-shadow: 0 0 20px rgba(240,136,62,0.6); } }
+        .pedido-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .pedido-id { font-weight: bold; color: #58a6ff; font-size: 16px; }
+        .pedido-estado { padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+        .estado-entregado { background: #238636; color: #7ee787; }
+        .estado-pagado { background: #1f6feb; color: #a5d6ff; }
+        .pedido-info { color: #8b949e; font-size: 13px; margin-bottom: 10px; line-height: 1.6; }
+        .pedido-items { font-size: 14px; color: #c9d1d9; margin-bottom: 10px; font-weight: 500; }
+        .pedido-mesa { background: #0d1117; border-radius: 8px; padding: 8px 12px; margin-bottom: 10px; font-size: 13px; border-left: 3px solid #f0883e; }
+        .pedido-total { text-align: right; font-size: 22px; font-weight: 700; color: #7ee787; margin-bottom: 10px; }
+        .pedido-actions { display: flex; gap: 8px; margin-top: 8px; }
+        .btn { padding: 12px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; flex: 1; text-align: center; }
+        .btn:active { opacity: 0.8; transform: scale(0.98); }
+        .btn-pagar { background: #f0883e; color: #0d1117; }
+        .btn-pagado { background: #1f6feb; color: white; }
+        .empty { text-align: center; padding: 60px 20px; color: #484f58; }
+        .status-bar { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; background: #238636; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .stats { display: flex; gap: 8px; margin-bottom: 12px; }
+        .stat { flex: 1; background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px; text-align: center; }
+        .stat .num { font-size: 24px; font-weight: 700; }
+        .stat .label { font-size: 11px; color: #8b949e; text-transform: uppercase; }
+        #loginSection { max-width: 400px; margin: 60px auto; padding: 0 16px; }
+        #loginSection h2 { color: #58a6ff; margin-bottom: 20px; text-align: center; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; color: #8b949e; font-size: 12px; margin-bottom: 4px; text-transform: uppercase; }
+        .form-group input { width: 100%; padding: 12px; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: #c9d1d9; font-size: 16px; }
+        .form-group input:focus { border-color: #58a6ff; outline: none; }
+        .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; }
+        .btn-primary { background: #1f6feb; color: white; width: 100%; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: 600; }
+        .btn-cerrar { background: #da3633; color: white; padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+<div id="loginSection">
+    <h2>Caja</h2>
+    <div class="card">
+        <div class="form-group">
+            <label>Nombre</label>
+            <input type="text" id="loginNombre" placeholder="Tu nombre">
+        </div>
+        <div class="form-group">
+            <label>Contrasena</label>
+            <input type="password" id="pinInput" maxlength="4" placeholder="****" inputmode="numeric">
+        </div>
+        <button class="btn-primary" onclick="loginPin()">Entrar</button>
+        <p id="loginError" style="color:#da3633;text-align:center;margin-top:12px;display:none"></p>
+    </div>
+</div>
+
+<div id="cajaSection" style="display:none">
+    <div class="header">
+        <div>
+            <h1 id="empresaNombre">Caja</h1>
+            <span style="color:#8b949e;font-size:12px" id="workerName"></span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+            <button onclick="showChangePin()" style="background:#30363d;color:#c9d1d9;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:12px">🔑 Cambiar clave</button>
+            <button class="btn-cerrar" onclick="location.reload()">Salir</button>
+        </div>
+    </div>
+    <div class="container">
+        <div class="status-bar">
+            <span class="dot"></span>
+            <span>En linea</span>
+            <span style="flex:1"></span>
+            <span style="color:#8b949e;font-size:12px" id="pedidoCount">0 pedidos</span>
+        </div>
+        <div class="stats">
+            <div class="stat"><div class="num" style="color:#f0883e" id="statPorPagar">0</div><div class="label">Por cobrar</div></div>
+            <div class="stat"><div class="num" style="color:#7ee787" id="statPagado">0</div><div class="label">Pagados</div></div>
+            <div class="stat"><div class="num" style="color:#58a6ff" id="statTotal">$0</div><div class="label">Total hoy</div></div>
+        </div>
+        <div id="pedidosContainer">
+            <div class="empty">Cargando pedidos...</div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://eyfgkopaamnkprzpwocz.supabase.co";
+const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5Zmdrb3BhYW1ua3ByenB3b2N6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2MTk0ODMsImV4cCI6MjA5NDE5NTQ4M30.bXkq4Ks3p2yb2SQH76__8jXhmM5Thi2izIL5UPkKa0I";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+const params = new URLSearchParams(window.location.search);
+let empresaId = params.get("empresa") || "";
+let empresaData = null;
+let usuarioData = null;
+
+document.getElementById("pinInput").addEventListener("keypress", e => { if (e.key === "Enter") loginPin(); });
+
+async function loginPin() {
+    const nombre = document.getElementById("loginNombre").value.trim();
+    const pin = document.getElementById("pinInput").value.trim();
+    if (!nombre) { showError("Ingresa tu nombre"); return; }
+    if (!pin) { showError("Ingresa tu contrasena"); return; }
+    const { data: usuarios } = await sb.from("usuarios_empresa").select("*, empresas(id,nombre)").eq("pin", pin).eq("activo", true);
+    if (!usuarios || usuarios.length === 0) { showError("Contrasena incorrecta"); return; }
+    const usr = usuarios.find(u => u.nombre && u.nombre.toLowerCase() === nombre.toLowerCase()) || usuarios[0];
+    if (usr.nombre && usr.nombre.toLowerCase() !== nombre.toLowerCase()) { showError("Nombre no registrado"); return; }
+    if (usr.rol !== "caja" && usr.rol !== "admin") { showError("Este usuario no es de caja"); return; }
+    empresaId = usr.empresa_id;
+    empresaData = usr.empresas;
+    usuarioData = usr;
+    document.getElementById("empresaNombre").textContent = empresaData?.nombre || "Caja";
+    document.getElementById("workerName").textContent = usuarioData?.nombre || "";
+    document.getElementById("loginSection").style.display = "none";
+    document.getElementById("cajaSection").style.display = "block";
+    loadPedidos();
+    setInterval(loadPedidos, 8000);
+}
+
+function showError(msg) {
+    const el = document.getElementById("loginError");
+    el.textContent = msg;
+    el.style.display = "block";
+}
+
+async function loadPedidos() {
+    if (!empresaId) return;
+    const { data: pedidos } = await sb.from("pedidos").select("*").eq("empresa_id", empresaId)
+        .order("created_at", { ascending: false });
+
+    const pedidosList = (pedidos || []).filter(p => ["entregado", "pagado"].includes(p.estado));
+    document.getElementById("pedidoCount").textContent = pedidosList.length + " pedidos";
+
+    let porCobrar = 0, pagados = 0, total = 0;
+    pedidosList.forEach(p => {
+        const t = parseFloat(p.total) || 0;
+        if (p.estado === "entregado") { porCobrar++; total += t; }
+        if (p.estado === "pagado") { pagados++; total += t; }
+    });
+
+    document.getElementById("statPorPagar").textContent = porCobrar;
+    document.getElementById("statPagado").textContent = pagados;
+    document.getElementById("statTotal").textContent = "$" + total.toLocaleString();
+
+    const container = document.getElementById("pedidosContainer");
+    if (pedidosList.length === 0) {
+        container.innerHTML = '<div class="empty">Sin pedidos</div>';
+        return;
+    }
+
+    container.innerHTML = pedidosList.map(p => {
+        const fecha = new Date(p.created_at).toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" });
+        let items = [];
+        try { items = typeof p.items === "string" ? JSON.parse(p.items) : (p.items || []); } catch(e) {}
+        const itemsHtml = items.map(i => `${i.cantidad || 1}x ${i.nombre || i}`).join(", ");
+        const esMesa = p.tipo_entrega === "Mesa";
+
+        return `<div class="pedido-card ${p.estado === 'entregado' ? 'sin-pagar' : ''}">
+            <div class="pedido-header">
+                <span class="pedido-id">#${p.id.substring(0,8).toUpperCase()}</span>
+                <span class="pedido-estado ${p.estado === 'entregado' ? 'estado-entregado' : 'estado-pagado'}">${p.estado === 'entregado' ? 'SIN PAGAR' : 'PAGADO'}</span>
+            </div>
+            <div class="pedido-items">${itemsHtml}</div>
+            ${esMesa ? `<div class="pedido-mesa">Mesa ${p.notas?.replace('Mesa #','') || ''} | ${p.cliente_nombre || "Cliente"}</div>` : ""}
+            <div class="pedido-total">$${(parseFloat(p.total) || 0).toLocaleString()}</div>
+            <div class="pedido-info">${fecha}</div>
+            <div class="pedido-actions">
+                ${p.estado === "entregado" ? `<button class="btn btn-pagar" onclick="marcarPagado('${p.id}')">💰 Cobrar</button>` : `<button class="btn btn-pagado">✅ Pagado</button>`}
+            </div>
+        </div>`;
+    }).join("");
+}
+
+async function marcarPagado(id) {
+    await sb.from("pedidos").update({ estado: "pagado" }).eq("id", id);
+    loadPedidos();
+}
+
+function showChangePin() {
+    let html = `<div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:300;display:flex;align-items:center;justify-content:center" onclick="if(event.target===this)this.remove()">
+        <div style="background:#161b22;border:1px solid #30363d;border-radius:12px;padding:20px;width:90%;max-width:320px">
+            <h3 style="color:#58a6ff;margin-bottom:12px">Cambiar contrasena</h3>
+            <input type="password" id="newPin" maxlength="4" placeholder="Nueva clave (4 digitos)" inputmode="numeric" style="width:100%;padding:12px;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;font-size:16px;text-align:center;letter-spacing:4px;margin-bottom:8px">
+            <input type="password" id="newPin2" maxlength="4" placeholder="Repetir clave" inputmode="numeric" style="width:100%;padding:12px;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;font-size:16px;text-align:center;letter-spacing:4px;margin-bottom:12px">
+            <p id="pinError" style="color:#da3633;font-size:13px;display:none"></p>
+            <button onclick="saveNewPin()" style="width:100%;padding:12px;background:#238636;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:600">Guardar</button>
+        </div>
+    </div>`;
+    document.body.insertAdjacentHTML("beforeend", html);
+}
+
+async function saveNewPin() {
+    const pin1 = document.getElementById("newPin").value.trim();
+    const pin2 = document.getElementById("newPin2").value.trim();
+    const errEl = document.getElementById("pinError");
+    if (pin1.length !== 4 || !/^\d+$/.test(pin1)) { errEl.textContent = "La clave debe ser 4 digitos"; errEl.style.display = "block"; return; }
+    if (pin1 !== pin2) { errEl.textContent = "Las claves no coinciden"; errEl.style.display = "block"; return; }
+    await sb.from("usuarios_empresa").update({ pin: pin1 }).eq("id", usuarioData.id);
+    document.querySelector("[style*='fixed']").remove();
+    alert("Contrasena actualizada");
+}
+</script>
+</body>
+</html>
