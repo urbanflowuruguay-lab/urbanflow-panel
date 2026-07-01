@@ -753,12 +753,21 @@ async function saveCategoria() {
     const subs = document.getElementById("catSubcats").value.split("\n").map(s => s.trim()).filter(Boolean);
     if (!nombre) { alert("Nombre es obligatorio"); return; }
     const data = { empresa_id: empresaId, nombre, icono, subcategorias: subs };
+    let result;
     if (id) {
-        await sb.from("categorias_empresa").update(data).eq("id", id);
+        result = await sb.from("categorias_empresa").update(data).eq("id", id);
     } else {
-        await sb.from("categorias_empresa").insert(data);
+        result = await sb.from("categorias_empresa").insert(data);
     }
-    const { data: updated } = await sb.from("categorias_empresa").select("*").eq("empresa_id", empresaId).order("orden");
+    if (result.error) {
+        alert("Error guardando categoria: " + result.error.message + "\n\nDetalles: " + JSON.stringify(result.error));
+        console.error("saveCategoria error:", result.error);
+        return;
+    }
+    const { data: updated, error: fetchErr } = await sb.from("categorias_empresa").select("*").eq("empresa_id", empresaId).order("orden");
+    if (fetchErr) {
+        console.error("fetch cats error:", fetchErr);
+    }
     categoriasEmpresa = updated || [];
     resetCatForm();
     renderCatsList();
@@ -766,7 +775,11 @@ async function saveCategoria() {
 
 async function deleteCategoria(id, nombre) {
     if (!confirm(`Borrar "${nombre}"?`)) return;
-    await sb.from("categorias_empresa").delete().eq("id", id);
+    const { error } = await sb.from("categorias_empresa").delete().eq("id", id);
+    if (error) {
+        alert("Error borrando: " + error.message);
+        return;
+    }
     const { data: updated } = await sb.from("categorias_empresa").select("*").eq("empresa_id", empresaId).order("orden");
     categoriasEmpresa = updated || [];
     renderCatsList();
