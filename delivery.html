@@ -11,25 +11,33 @@
         .header h1 { font-size: 16px; color: #58a6ff; }
         .header .rest-name { color: #8b949e; font-size: 12px; }
         .container { padding: 12px; max-width: 600px; margin: 0 auto; padding-bottom: 80px; }
-        .pedido-card { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 14px; margin-bottom: 10px; }
-        .pedido-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .pedido-id { font-weight: bold; color: #58a6ff; font-size: 15px; }
-        .pedido-estado { padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+        .pedido-card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+        .pedido-card.nuevo { border-color: #f0883e; animation: glow 1.5s infinite; }
+        @keyframes glow { 0%, 100% { box-shadow: 0 0 5px rgba(240,136,62,0.3); } 50% { box-shadow: 0 0 20px rgba(240,136,62,0.6); } }
+        .pedido-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .pedido-id { font-weight: bold; color: #58a6ff; font-size: 16px; }
+        .pedido-estado { padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
         .estado-listo { background: #238636; color: #7ee787; }
         .estado-en_camino { background: #9e6a03; color: #f0e68c; }
-        .pedido-info { color: #8b949e; font-size: 13px; margin-bottom: 8px; line-height: 1.6; }
-        .pedido-direccion { background: #0d1117; border-radius: 6px; padding: 8px 12px; margin-bottom: 10px; font-size: 13px; }
-        .pedido-actions { display: flex; gap: 8px; }
-        .btn { padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; flex: 1; }
-        .btn:active { opacity: 0.8; }
-        .btn-entregar { background: #238636; color: white; }
-        .btn-map { background: #1f6feb; color: white; }
-        .btn-navegar { background: #9e6a03; color: white; }
+        .estado-entregado { background: #1f6feb; color: #a5d6ff; }
+        .pedido-info { color: #8b949e; font-size: 13px; margin-bottom: 10px; line-height: 1.6; }
+        .pedido-items { font-size: 14px; color: #c9d1d9; margin-bottom: 10px; font-weight: 500; }
+        .pedido-direccion { background: #0d1117; border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; font-size: 13px; border-left: 3px solid #58a6ff; }
+        .pedido-secreta { background: #1a1e2e; border: 2px dashed #f0883e; border-radius: 8px; padding: 12px; margin-bottom: 10px; text-align: center; }
+        .pedido-secreta .label { color: #f0883e; font-size: 11px; text-transform: uppercase; margin-bottom: 4px; }
+        .pedido-secreta .palabra { font-size: 22px; font-weight: bold; color: #f0e68c; letter-spacing: 3px; }
+        .pedido-total { font-size: 18px; font-weight: bold; color: #7ee787; margin: 8px 0; }
+        .pedido-actions { display: flex; gap: 8px; margin-top: 8px; }
+        .btn { padding: 12px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; flex: 1; text-align: center; }
+        .btn:active { opacity: 0.8; transform: scale(0.98); }
+        .btn-aceptar { background: #238636; color: white; }
+        .btn-navegar { background: #1f6feb; color: white; }
+        .btn-entregar { background: #f0883e; color: white; }
+        .btn-cancelar { background: #da3633; color: white; flex: 0.5; }
         .empty { text-align: center; padding: 60px 20px; color: #484f58; }
         .status-bar { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
         .dot { width: 10px; height: 10px; border-radius: 50%; }
         .dot-on { background: #238636; animation: pulse 2s infinite; }
-        .dot-off { background: #da3633; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         #loginSection { max-width: 400px; margin: 60px auto; padding: 0 16px; }
         #loginSection h2 { color: #58a6ff; margin-bottom: 20px; text-align: center; }
@@ -40,6 +48,18 @@
         .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; }
         .btn-primary { background: #1f6feb; color: white; width: 100%; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: 600; }
         .btn-cerrar { background: #da3633; color: white; padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 200; justify-content: center; align-items: center; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 24px; width: 90%; max-width: 360px; text-align: center; }
+        .modal h3 { color: #f0883e; margin-bottom: 16px; font-size: 18px; }
+        .modal-input { width: 100%; padding: 14px; background: #0d1117; border: 2px solid #30363d; border-radius: 8px; color: #f0e68c; font-size: 20px; text-align: center; letter-spacing: 4px; text-transform: uppercase; font-weight: bold; }
+        .modal-input:focus { border-color: #f0883e; outline: none; }
+        .modal-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600; margin-top: 12px; }
+        .modal-btn-confirm { background: #238636; color: white; }
+        .modal-btn-cancel { background: #30363d; color: #8b949e; }
+        .modal-error { color: #da3633; font-size: 13px; margin-top: 8px; display: none; }
+        .modal-ok { color: #7ee787; font-size: 14px; margin-top: 12px; display: none; }
     </style>
 </head>
 <body>
@@ -48,7 +68,7 @@
     <h2>Delivery</h2>
     <div class="card">
         <div class="form-group">
-            <label>PIN del restaurante</label>
+            <label>Tu PIN</label>
             <input type="password" id="pinInput" maxlength="6" placeholder="****" inputmode="numeric" autofocus>
         </div>
         <button class="btn-primary" onclick="loginPin()">Entrar</button>
@@ -59,21 +79,33 @@
 <div id="deliverySection" style="display:none">
     <div class="header">
         <div>
-            <h1 id="empresaNombre">Delivery</h1>
+            <h1 id="deliveryName">Delivery</h1>
             <span class="rest-name" id="restInfo"></span>
         </div>
         <button class="btn-cerrar" onclick="logout()">Salir</button>
     </div>
     <div class="container">
         <div class="status-bar">
-            <span class="dot dot-on" id="statusDot"></span>
-            <span id="statusText">Conectado</span>
+            <span class="dot dot-on"></span>
+            <span>Conectado</span>
             <span style="flex:1"></span>
             <span style="color:#8b949e;font-size:12px" id="pedidoCount">0 pedidos</span>
         </div>
         <div id="pedidosContainer">
             <div class="empty">Cargando pedidos...</div>
         </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalEntrega">
+    <div class="modal">
+        <h3>Pedido #<span id="modalPedidoId"></span></h3>
+        <p style="color:#8b949e;font-size:13px;margin-bottom:12px">Pedile la palabra secreta al cliente</p>
+        <input type="text" class="modal-input" id="inputSecreta" placeholder="Palabra secreta" maxlength="20" autocomplete="off">
+        <p class="modal-error" id="modalError">Palabra incorrecta. Intenta de nuevo.</p>
+        <p class="modal-ok" id="modalOk">✅ Entrega confirmada. Cobrando...</p>
+        <button class="modal-btn modal-btn-confirm" onclick="confirmarEntrega()">Confirmar Entrega</button>
+        <button class="modal-btn modal-btn-cancel" onclick="cerrarModal()">Cancelar</button>
     </div>
 </div>
 
@@ -87,10 +119,16 @@ const params = new URLSearchParams(window.location.search);
 let empresaId = params.get("empresa") || "";
 let empresaData = null;
 let usuarioData = null;
-let myLat = -34.9011, myLon = -56.1645;
+let deliveryNombre = "";
+let prevCount = 0;
+let pedidoActualId = null;
 
-const paramsQR = new URLSearchParams(window.location.search);
-empresaId = paramsQR.get("empresa") || "";
+const notifSound = new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgip2+q2EcDjiRtculcBwLH3y6xZ9TEwwfjL3NplkRCx+St8miVhQMG5C3yZ9VEQsdkLjJn1YSDBySt8eYUxEJHZK4yJZQDgcdlLjHlE0NBR2VuMeTTQ0DHpW5xo1KCwEelrjFi0UJAB+XucOIRAEAH5i6wIVB/wAhmbrAfD37ACOausB3OvkAKJy6v3I39wAmnbrAbzPzAC2dub9sMPEAMp25v2kv7wA0nrm9ZSzsADSfub1jKusANJ+5vV8o5wA1n7m9XSbiADafub1bIdoANp+5vVkf1QA3n7m9WR3SADifub1XGs8AOp+5vVcZywA5n7m9VhfIADufub1WFcYAPJ+5vVUUwQA9n7m9VRK7AD6fub1VEbYAP5+5vVMOsgBAn7m9UwuwAEGfub1SCa0AQp+5vVEHqgBDn7m9UAWnAESfub1PA6MARZ+5vU4ApABGn7m9Tf6hAEefub1M/Z8ASJ+5vUv8nQBJn7m9SvubAEqfub1J+pgAS5+5vUj5lgBLn7m9R/eVAEyfub1G9pMATJ+5vUX0kABNn7m9RPKMAE6fub1D8YkAT5+5vULwhwBQn7m9QfCEAFCfub0=");
+
+function playNotif() {
+    notifSound.currentTime = 0;
+    notifSound.play().catch(() => {});
+}
 
 if (empresaId) {
     document.getElementById("loginSection").style.display = "none";
@@ -103,21 +141,15 @@ if (empresaId) {
 async function loginPin() {
     const pin = document.getElementById("pinInput").value.trim();
     if (!pin) { showError("Ingresa el PIN"); return; }
-
     const { data: usuarios } = await sb.from("usuarios_empresa").select("*, empresas(id,nombre)").eq("pin", pin).eq("activo", true);
     if (!usuarios || usuarios.length === 0) { showError("PIN incorrecto"); return; }
-
     const usr = usuarios[0];
-    if (usr.rol !== "delivery" && usr.rol !== "admin") {
-        showError("Este PIN no es de delivery");
-        return;
-    }
-
+    if (usr.rol !== "delivery" && usr.rol !== "admin") { showError("Este PIN no es de delivery"); return; }
     empresaId = usr.empresa_id;
     empresaData = usr.empresas;
     usuarioData = usr;
-
-    document.getElementById("empresaNombre").textContent = "Delivery";
+    deliveryNombre = usr.nombre || "Delivery";
+    document.getElementById("deliveryName").textContent = deliveryNombre;
     document.getElementById("restInfo").textContent = empresaData?.nombre || "";
     document.getElementById("loginSection").style.display = "none";
     document.getElementById("deliverySection").style.display = "block";
@@ -125,26 +157,16 @@ async function loginPin() {
 }
 
 function showError(msg) {
-    document.getElementById("loginError").textContent = msg;
-    document.getElementById("loginError").style.display = "block";
+    const el = document.getElementById("loginError");
+    el.textContent = msg;
+    el.style.display = "block";
 }
 
-function logout() {
-    sb.auth.signOut();
-    localStorage.removeItem("delivery_empresa");
-    location.reload();
-}
+function logout() { location.reload(); }
 
 async function startDelivery() {
-    if (navigator.geolocation) {
-        navigator.geolocation.watchPosition(pos => {
-            myLat = pos.coords.latitude;
-            myLon = pos.coords.longitude;
-        }, () => {}, { enableHighAccuracy: true });
-    }
-
     loadPedidos();
-    setInterval(loadPedidos, 10000);
+    setInterval(loadPedidos, 8000);
 }
 
 async function loadPedidos() {
@@ -157,39 +179,48 @@ async function loadPedidos() {
     const pedidosList = pedidos || [];
     document.getElementById("pedidoCount").textContent = pedidosList.length + " pedidos";
 
+    if (pedidosList.length > prevCount && prevCount > 0) playNotif();
+    prevCount = pedidosList.length;
+
     if (pedidosList.length === 0) {
         container.innerHTML = '<div class="empty">Sin pedidos para entregar</div>';
         return;
     }
 
     container.innerHTML = pedidosList.map(p => {
-        const esDelivery = p.tipo_entrega === "Delivery";
         const destino = p.direccion_entrega || "";
-        const dirCoords = p.dest_lat && p.dest_lon ? `https://www.google.com/maps?q=${p.dest_lat},${p.dest_lon}` : "";
+        const tieneCoords = p.dest_lat && p.dest_lon;
         const fecha = new Date(p.created_at).toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" });
-
         let items = [];
         try { items = typeof p.items === "string" ? JSON.parse(p.items) : (p.items || []); } catch(e) {}
         const itemsHtml = items.map(i => `${i.cantidad || 1}x ${i.nombre || i}`).join(", ");
+        const esNuevo = p.estado === "listo";
 
-        return `<div class="pedido-card">
+        return `<div class="pedido-card ${esNuevo ? 'nuevo' : ''}">
             <div class="pedido-header">
                 <span class="pedido-id">#${p.id.substring(0,8).toUpperCase()}</span>
-                <span class="pedido-estado ${p.estado === 'listo' ? 'estado-listo' : 'estado-en_camino'}">${p.estado.toUpperCase()}</span>
+                <span class="pedido-estado ${p.estado === 'listo' ? 'estado-listo' : 'estado-en_camino'}">${p.estado === 'listo' ? 'LISTO PARA RETIRAR' : 'EN CAMINO'}</span>
             </div>
             <div class="pedido-info">
-                ${p.cliente_nombre || "Cliente"} | ${p.tipo_entrega || "Retiro"} | ${fecha}<br>
-                ${itemsHtml}
+                ${p.cliente_nombre || "Cliente"} | ${fecha}
             </div>
+            <div class="pedido-items">${itemsHtml}</div>
+            <div class="pedido-total">$${(p.total || 0).toFixed(0)}</div>
+            ${p.palabra_secreta && p.estado === "en_camino" ? `
+                <div class="pedido-secreta">
+                    <div class="label">Palabra secreta para el cliente</div>
+                    <div class="palabra">${p.palabra_secreta}</div>
+                </div>
+            ` : ""}
             ${destino ? `<div class="pedido-direccion">
                 📍 ${destino}
-                ${dirCoords ? `<a href="${dirCoords}" target="_blank" style="color:#58a6ff;font-size:12px;margin-left:8px">Abrir mapa</a>` : ""}
+                ${tieneCoords ? `<a href="https://www.google.com/maps/dir/?api=1&destination=${p.dest_lat},${p.dest_lon}" target="_blank" style="color:#58a6ff;font-size:12px;margin-left:8px">🗺️ Navegar</a>` : ""}
             </div>` : ""}
             <div class="pedido-actions">
-                ${p.estado === "listo" ? `<button class="btn btn-navegar" onclick="tomarPedido('${p.id}')">Tomar</button>` : ""}
+                ${p.estado === "listo" ? `<button class="btn btn-aceptar" onclick="tomarPedido('${p.id}')">🚴 Tomar Pedido</button>` : ""}
                 ${p.estado === "en_camino" ? `
-                    <button class="btn btn-map" onclick="abrirMapa('${p.dest_lat}','${p.dest_lon}')">Mapa</button>
-                    <button class="btn btn-entregar" onclick="entregarPedido('${p.id}')">Entregado</button>
+                    ${tieneCoords ? `<button class="btn btn-navegar" onclick="abrirMapa('${p.dest_lat}','${p.dest_lon}')">🗺️ Mapa</button>` : ""}
+                    <button class="btn btn-entregar" onclick="abrirModalEntrega('${p.id}')">✅ Entregado</button>
                 ` : ""}
             </div>
         </div>`;
@@ -197,13 +228,48 @@ async function loadPedidos() {
 }
 
 async function tomarPedido(id) {
-    await sb.from("pedidos").update({ estado: "en_camino" }).eq("id", id);
+    await sb.from("pedidos").update({ estado: "en_camino", delivery_nombre: deliveryNombre }).eq("id", id);
+    playNotif();
     loadPedidos();
 }
 
-async function entregarPedido(id) {
-    await sb.from("pedidos").update({ estado: "entregado" }).eq("id", id);
-    loadPedidos();
+function abrirModalEntrega(id) {
+    pedidoActualId = id;
+    document.getElementById("modalPedidoId").textContent = id.substring(0,8).toUpperCase();
+    document.getElementById("inputSecreta").value = "";
+    document.getElementById("modalError").style.display = "none";
+    document.getElementById("modalOk").style.display = "none";
+    document.getElementById("modalEntrega").classList.add("show");
+    document.getElementById("inputSecreta").focus();
+}
+
+function cerrarModal() {
+    document.getElementById("modalEntrega").classList.remove("show");
+    pedidoActualId = null;
+}
+
+async function confirmarEntrega() {
+    const input = document.getElementById("inputSecreta").value.trim();
+    if (!input) return;
+
+    const { data: pedido } = await sb.from("pedidos").select("palabra_secreta").eq("id", pedidoActualId).single();
+
+    if (!pedido || input.toLowerCase() !== (pedido.palabra_secreta || "").toLowerCase()) {
+        document.getElementById("modalError").style.display = "block";
+        document.getElementById("inputSecreta").value = "";
+        document.getElementById("inputSecreta").focus();
+        return;
+    }
+
+    document.getElementById("modalError").style.display = "none";
+    document.getElementById("modalOk").style.display = "block";
+
+    await sb.from("pedidos").update({ estado: "entregado" }).eq("id", pedidoActualId);
+
+    setTimeout(() => {
+        cerrarModal();
+        loadPedidos();
+    }, 1500);
 }
 
 function abrirMapa(lat, lon) {
