@@ -9,32 +9,33 @@
         body { font-family: 'Segoe UI', sans-serif; background: #0d1117; color: #c9d1d9; min-height: 100vh; }
         .header { background: #161b22; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; position: sticky; top: 0; z-index: 100; }
         .header h1 { font-size: 16px; color: #58a6ff; }
-        .container { padding: 12px; max-width: 600px; margin: 0 auto; padding-bottom: 80px; }
-        .pedido-card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
-        .pedido-card.sin-pagar { border-color: #f0883e; animation: glow-orange 1.5s infinite; }
-        @keyframes glow-orange { 0%, 100% { box-shadow: 0 0 5px rgba(240,136,62,0.3); } 50% { box-shadow: 0 0 20px rgba(240,136,62,0.6); } }
-        .pedido-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .pedido-id { font-weight: bold; color: #58a6ff; font-size: 16px; }
-        .pedido-estado { padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
-        .estado-entregado { background: #238636; color: #7ee787; }
-        .estado-pagado { background: #1f6feb; color: #a5d6ff; }
-        .pedido-info { color: #8b949e; font-size: 13px; margin-bottom: 10px; line-height: 1.6; }
-        .pedido-items { font-size: 14px; color: #c9d1d9; margin-bottom: 10px; font-weight: 500; }
-        .pedido-mesa { background: #0d1117; border-radius: 8px; padding: 8px 12px; margin-bottom: 10px; font-size: 13px; border-left: 3px solid #f0883e; }
-        .pedido-total { text-align: right; font-size: 22px; font-weight: 700; color: #7ee787; margin-bottom: 10px; }
-        .pedido-actions { display: flex; gap: 8px; margin-top: 8px; }
-        .btn { padding: 12px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; flex: 1; text-align: center; }
+        .container { padding: 12px; max-width: 500px; margin: 0 auto; padding-bottom: 80px; }
+        .summary { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+        .summary-card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 14px 10px; text-align: center; }
+        .summary-card .num { font-size: 22px; font-weight: 700; }
+        .summary-card .label { font-size: 11px; color: #8b949e; text-transform: uppercase; margin-top: 2px; }
+        .section-title { color: #58a6ff; font-size: 14px; font-weight: 600; margin: 16px 0 10px; display: flex; align-items: center; gap: 6px; }
+        .section-title .count { background: #30363d; color: #8b949e; font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+        .pedido-card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 14px; margin-bottom: 10px; }
+        .pedido-card.pendiente { border-left: 4px solid #f0883e; }
+        .pedido-card.pagado { border-left: 4px solid #238636; }
+        .pedido-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .pedido-id { font-weight: bold; color: #58a6ff; font-size: 14px; }
+        .badge { padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+        .badge-pendiente { background: #f0883e22; color: #f0883e; }
+        .badge-pagado { background: #23863622; color: #7ee787; }
+        .pedido-items { font-size: 13px; color: #8b949e; margin-bottom: 6px; }
+        .pedido-mesa { font-size: 12px; color: #f0883e; margin-bottom: 4px; }
+        .pedido-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+        .pedido-total { font-size: 20px; font-weight: 700; color: #7ee787; }
+        .pedido-hora { font-size: 12px; color: #484f58; }
+        .btn { padding: 12px 20px; border: none; border-radius: 10px; cursor: pointer; font-size: 15px; font-weight: 700; width: 100%; }
         .btn:active { opacity: 0.8; transform: scale(0.98); }
-        .btn-pagar { background: #f0883e; color: #0d1117; }
-        .btn-pagado { background: #1f6feb; color: white; }
-        .empty { text-align: center; padding: 60px 20px; color: #484f58; }
-        .status-bar { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
-        .dot { width: 10px; height: 10px; border-radius: 50%; background: #238636; animation: pulse 2s infinite; }
+        .btn-cobrar { background: #f0883e; color: #0d1117; }
+        .btn-cobrado { background: #238636; color: white; }
+        .empty { text-align: center; padding: 40px 20px; color: #484f58; font-size: 14px; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; background: #238636; display: inline-block; animation: pulse 2s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        .stats { display: flex; gap: 8px; margin-bottom: 12px; }
-        .stat { flex: 1; background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px; text-align: center; }
-        .stat .num { font-size: 24px; font-weight: 700; }
-        .stat .label { font-size: 11px; color: #8b949e; text-transform: uppercase; }
         #loginSection { max-width: 400px; margin: 60px auto; padding: 0 16px; }
         #loginSection h2 { color: #58a6ff; margin-bottom: 20px; text-align: center; }
         .form-group { margin-bottom: 12px; }
@@ -44,6 +45,9 @@
         .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; }
         .btn-primary { background: #1f6feb; color: white; width: 100%; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: 600; }
         .btn-cerrar { background: #da3633; color: white; padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; }
+        .worker-info { display: flex; align-items: center; gap: 10px; }
+        .worker-photo { width: 36px; height: 36px; border-radius: 50%; background: #30363d; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+        .worker-photo img { width: 100%; height: 100%; object-fit: cover; }
     </style>
 </head>
 <body>
@@ -66,30 +70,30 @@
 
 <div id="cajaSection" style="display:none">
     <div class="header">
-        <div>
-            <h1 id="empresaNombre">Caja</h1>
-            <span style="color:#8b949e;font-size:12px" id="workerName"></span>
+        <div class="worker-info">
+            <div class="worker-photo" id="workerPhoto">👤</div>
+            <div>
+                <h1 id="empresaNombre">Caja</h1>
+                <span style="color:#8b949e;font-size:12px" id="workerName"></span>
+            </div>
         </div>
         <div style="display:flex;gap:8px;align-items:center">
-            <button onclick="showChangePin()" style="background:#30363d;color:#c9d1d9;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:12px">🔑 Cambiar clave</button>
+            <button onclick="showChangePin()" style="background:#30363d;color:#c9d1d9;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:12px">🔑</button>
             <button class="btn-cerrar" onclick="location.reload()">Salir</button>
         </div>
     </div>
     <div class="container">
-        <div class="status-bar">
-            <span class="dot"></span>
-            <span>En linea</span>
-            <span style="flex:1"></span>
-            <span style="color:#8b949e;font-size:12px" id="pedidoCount">0 pedidos</span>
+        <div class="summary">
+            <div class="summary-card"><div class="num" style="color:#f0883e" id="statPendiente">$0</div><div class="label">Por cobrar</div></div>
+            <div class="summary-card"><div class="num" style="color:#7ee787" id="statCobrado">$0</div><div class="label">Cobrado</div></div>
+            <div class="summary-card"><div class="num" style="color:#58a6ff" id="statPedidos">0</div><div class="label">Pedidos</div></div>
         </div>
-        <div class="stats">
-            <div class="stat"><div class="num" style="color:#f0883e" id="statPorPagar">0</div><div class="label">Por cobrar</div></div>
-            <div class="stat"><div class="num" style="color:#7ee787" id="statPagado">0</div><div class="label">Pagados</div></div>
-            <div class="stat"><div class="num" style="color:#58a6ff" id="statTotal">$0</div><div class="label">Total hoy</div></div>
-        </div>
-        <div id="pedidosContainer">
-            <div class="empty">Cargando pedidos...</div>
-        </div>
+
+        <div class="section-title">🔔 Por cobrar <span class="count" id="countPendiente">0</span></div>
+        <div id="pendientesContainer"><div class="empty">Sin pedidos pendientes</div></div>
+
+        <div class="section-title" style="margin-top:20px">📋 Cobrados hoy <span class="count" id="countPagados">0</span></div>
+        <div id="pagadosContainer"><div class="empty">Sin pagos hoy</div></div>
     </div>
 </div>
 
@@ -121,6 +125,9 @@ async function loginPin() {
     usuarioData = usr;
     document.getElementById("empresaNombre").textContent = empresaData?.nombre || "Caja";
     document.getElementById("workerName").textContent = usuarioData?.nombre || "";
+    if (usuarioData.foto_url) {
+        document.getElementById("workerPhoto").innerHTML = '<img src="' + usuarioData.foto_url + '">';
+    }
     document.getElementById("loginSection").style.display = "none";
     document.getElementById("cajaSection").style.display = "block";
     loadPedidos();
@@ -133,55 +140,84 @@ function showError(msg) {
     el.style.display = "block";
 }
 
-async function loadPedidos() {
-    if (!empresaId) return;
-    const { data: pedidos } = await sb.from("pedidos").select("*").eq("empresa_id", empresaId)
-        .order("created_at", { ascending: false });
-
-    const pedidosList = (pedidos || []).filter(p => ["entregado", "pagado"].includes(p.estado));
-    document.getElementById("pedidoCount").textContent = pedidosList.length + " pedidos";
-
-    let porCobrar = 0, pagados = 0, total = 0;
-    pedidosList.forEach(p => {
-        const t = parseFloat(p.total) || 0;
-        if (p.estado === "entregado") { porCobrar++; total += t; }
-        if (p.estado === "pagado") { pagados++; total += t; }
-    });
-
-    document.getElementById("statPorPagar").textContent = porCobrar;
-    document.getElementById("statPagado").textContent = pagados;
-    document.getElementById("statTotal").textContent = "$" + total.toLocaleString();
-
-    const container = document.getElementById("pedidosContainer");
-    if (pedidosList.length === 0) {
-        container.innerHTML = '<div class="empty">Sin pedidos</div>';
-        return;
-    }
-
-    container.innerHTML = pedidosList.map(p => {
-        const fecha = new Date(p.created_at).toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" });
-        let items = [];
-        try { items = typeof p.items === "string" ? JSON.parse(p.items) : (p.items || []); } catch(e) {}
-        const itemsHtml = items.map(i => `${i.cantidad || 1}x ${i.nombre || i}`).join(", ");
-        const esMesa = p.tipo_entrega === "Mesa";
-
-        return `<div class="pedido-card ${p.estado === 'entregado' ? 'sin-pagar' : ''}">
-            <div class="pedido-header">
-                <span class="pedido-id">#${p.id.substring(0,8).toUpperCase()}</span>
-                <span class="pedido-estado ${p.estado === 'entregado' ? 'estado-entregado' : 'estado-pagado'}">${p.estado === 'entregado' ? 'SIN PAGAR' : 'PAGADO'}</span>
-            </div>
-            <div class="pedido-items">${itemsHtml}</div>
-            ${esMesa ? `<div class="pedido-mesa">Mesa ${p.notas?.replace('Mesa #','') || ''} | ${p.cliente_nombre || "Cliente"}</div>` : ""}
-            <div class="pedido-total">$${(parseFloat(p.total) || 0).toLocaleString()}</div>
-            <div class="pedido-info">${fecha}</div>
-            <div class="pedido-actions">
-                ${p.estado === "entregado" ? `<button class="btn btn-pagar" onclick="marcarPagado('${p.id}')">💰 Cobrar</button>` : `<button class="btn btn-pagado">✅ Pagado</button>`}
-            </div>
-        </div>`;
-    }).join("");
+function formatTime(ts) {
+    return new Date(ts).toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" });
 }
 
-async function marcarPagado(id) {
+function parseItems(items) {
+    try { return typeof items === "string" ? JSON.parse(items) : (items || []); } catch { return []; }
+}
+
+async function loadPedidos() {
+    if (!empresaId) return;
+    const { data: pedidos } = await sb.from("pedidos").select("*").eq("empresa_id", empresaId).order("created_at", { ascending: false });
+
+    const all = pedidos || [];
+    const pendientes = all.filter(p => p.estado === "entregado");
+    const pagados = all.filter(p => p.estado === "pagado" && new Date(p.created_at).toDateString() === new Date().toDateString());
+
+    let totalPendiente = 0, totalCobrado = 0;
+    pendientes.forEach(p => totalPendiente += parseFloat(p.total) || 0);
+    pagados.forEach(p => totalCobrado += parseFloat(p.total) || 0);
+
+    document.getElementById("statPendiente").textContent = "$" + totalPendiente.toLocaleString();
+    document.getElementById("statCobrado").textContent = "$" + totalCobrado.toLocaleString();
+    document.getElementById("statPedidos").textContent = pendientes.length + pagados.length;
+    document.getElementById("countPendiente").textContent = pendientes.length;
+    document.getElementById("countPagados").textContent = pagados.length;
+
+    const pendContainer = document.getElementById("pendientesContainer");
+    if (pendientes.length === 0) {
+        pendContainer.innerHTML = '<div class="empty">Sin pedidos pendientes</div>';
+    } else {
+        pendContainer.innerHTML = pendientes.map(p => {
+            const items = parseItems(p.items);
+            const itemsHtml = items.map(i => `${i.cantidad || 1}x ${i.nombre}`).join(", ");
+            const esMesa = p.tipo_entrega === "Mesa";
+            return `<div class="pedido-card pendiente">
+                <div class="pedido-top">
+                    <span class="pedido-id">#${p.id.substring(0,8).toUpperCase()}</span>
+                    <span class="badge badge-pendiente">SIN PAGAR</span>
+                </div>
+                <div class="pedido-items">${itemsHtml}</div>
+                ${esMesa ? `<div class="pedido-mesa">🍽️ Mesa ${p.notas?.replace('Mesa #','') || ''}</div>` : ""}
+                <div class="pedido-bottom">
+                    <span class="pedido-total">$${(parseFloat(p.total) || 0).toLocaleString()}</span>
+                    <span class="pedido-hora">${formatTime(p.created_at)}</span>
+                </div>
+                <button class="btn btn-cobrar" style="margin-top:10px" onclick="cobrar('${p.id}')">💰 COBRAR</button>
+            </div>`;
+        }).join("");
+    }
+
+    const pagContainer = document.getElementById("pagadosContainer");
+    if (pagados.length === 0) {
+        pagContainer.innerHTML = '<div class="empty">Sin pagos hoy</div>';
+    } else {
+        pagContainer.innerHTML = pagados.map(p => {
+            const items = parseItems(p.items);
+            const itemsHtml = items.map(i => `${i.cantidad || 1}x ${i.nombre}`).join(", ");
+            const esMesa = p.tipo_entrega === "Mesa";
+            return `<div class="pedido-card pagado">
+                <div class="pedido-top">
+                    <span class="pedido-id">#${p.id.substring(0,8).toUpperCase()}</span>
+                    <span class="badge badge-pagado">PAGADO</span>
+                </div>
+                <div class="pedido-items">${itemsHtml}</div>
+                ${esMesa ? `<div class="pedido-mesa">🍽️ Mesa ${p.notas?.replace('Mesa #','') || ''}</div>` : ""}
+                <div class="pedido-bottom">
+                    <span class="pedido-total">$${(parseFloat(p.total) || 0).toLocaleString()}</span>
+                    <span class="pedido-hora">${formatTime(p.created_at)}</span>
+                </div>
+            </div>`;
+        }).join("");
+    }
+}
+
+async function cobrar(id) {
+    const btn = event.target;
+    btn.disabled = true;
+    btn.textContent = "Procesando...";
     await sb.from("pedidos").update({ estado: "pagado" }).eq("id", id);
     loadPedidos();
 }
