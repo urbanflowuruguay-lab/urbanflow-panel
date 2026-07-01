@@ -95,15 +95,19 @@
 </div>
 
 <div class="estado-pedido" id="estadoPedido">
-    <div class="icon">👨‍🍳</div>
-    <h2>Tu eleccion ya esta en manos de nuestra cocina</h2>
-    <p>Pronto te la llevaran a la mesa.</p>
+    <div class="icon" id="estadoIcon">👨‍🍳</div>
+    <h2 id="estadoTitulo">Tu eleccion ya esta en manos de nuestra cocina</h2>
+    <p id="estadoMsg">Pronto te la llevaran a la mesa.</p>
+    <div id="camareroInfo" style="display:none;margin-top:16px;padding:12px;background:var(--bg2);border-radius:12px;border:1px solid var(--border)">
+        <p style="font-size:12px;color:var(--text2);margin-bottom:4px">Tu camarero:</p>
+        <p id="camareroNombre" style="font-size:16px;font-weight:600;color:var(--accent)"></p>
+    </div>
     <p id="pedidoIdDisplay" style="color:var(--accent);margin-top:12px;font-size:12px"></p>
     <div style="margin-top:24px;display:flex;gap:12px">
         <button class="volver" onclick="volverCarta()">Volver a la carta</button>
         <button class="volver" onclick="showRating()" style="background:var(--accent2);color:white">Calificar ⭐</button>
     </div>
-    <div style="margin-top:16px">
+    <div id="finalizarSection" style="display:none;margin-top:16px">
         <button class="volver" onclick="finalizarMesa()" style="background:#da3633;color:white;font-size:13px;padding:10px 20px">FINALIZAR Y DEJAR MESA</button>
     </div>
 </div>
@@ -552,10 +556,79 @@ async function enviarPedido() {
     carrito = [];
     updateCarritoBar();
     document.getElementById("estadoPedido").classList.add("show");
+    document.getElementById("finalizarSection").style.display = "none";
+    document.getElementById("camareroInfo").style.display = "none";
+    document.getElementById("estadoIcon").textContent = "👨‍🍳";
+    document.getElementById("estadoTitulo").textContent = "Tu eleccion ya esta en manos de nuestra cocina";
+    document.getElementById("estadoMsg").textContent = "Pronto te la llevaran a la mesa.";
+    startPedidoPolling();
+}
+
+let pedidoPolling = null;
+let pedidoActualId = null;
+
+function startPedidoPolling() {
+    if (pedidoPolling) clearInterval(pedidoPolling);
+    pedidoPolling = setInterval(checkPedidoStatus, 5000);
+    checkPedidoStatus();
+}
+
+async function checkPedidoStatus() {
+    if (!mesaToken) return;
+    const { data: pedidos } = await sb.from("pedidos").select("*").eq("mesa_token", mesaToken).order("created_at", { ascending: false }).limit(1);
+    const pedido = pedidos && pedidos.length > 0 ? pedidos[0] : null;
+    if (!pedido) return;
+    pedidoActualId = pedido.id;
+
+    const estado = pedido.estado;
+    const icon = document.getElementById("estadoIcon");
+    const titulo = document.getElementById("estadoTitulo");
+    const msg = document.getElementById("estadoMsg");
+    const camareroDiv = document.getElementById("camareroInfo");
+    const camareroNom = document.getElementById("camareroNombre");
+    const finalizarDiv = document.getElementById("finalizarSection");
+
+    if (estado === "recibido") {
+        icon.textContent = "👨‍🍳";
+        titulo.textContent = "Tu pedido esta en cola";
+        msg.textContent = "La cocina esta recibiendo tu pedido...";
+        camareroDiv.style.display = "none";
+        finalizarDiv.style.display = "none";
+    } else if (estado === "preparando") {
+        icon.textContent = "🔥";
+        titulo.textContent = "Tu pedido se esta preparando";
+        msg.textContent = "Nuestra cocina esta trabajando en tu pedido.";
+        camareroDiv.style.display = "none";
+        finalizarDiv.style.display = "none";
+    } else if (estado === "listo") {
+        icon.textContent = "✅";
+        titulo.textContent = "Tu pedido esta listo";
+        msg.textContent = "Un camarero lo estara llevando a tu mesa en un momento.";
+        camareroDiv.style.display = "none";
+        finalizarDiv.style.display = "none";
+    } else if (estado === "entregado") {
+        icon.textContent = "🍽️";
+        titulo.textContent = "Tu pedido fue entregado";
+        msg.textContent = "Esperamos que lo disfrutes.";
+        if (pedido.worker_nombre) {
+            camareroNom.textContent = "🍽️ " + pedido.worker_nombre;
+            camareroDiv.style.display = "block";
+        }
+        finalizarDiv.style.display = "block";
+        if (pedidoPolling) { clearInterval(pedidoPolling); pedidoPolling = null; }
+    } else if (estado === "cancelado") {
+        icon.textContent = "❌";
+        titulo.textContent = "Pedido cancelado";
+        msg.textContent = "Tu pedido fue cancelado.";
+        camareroDiv.style.display = "none";
+        finalizarDiv.style.display = "block";
+        if (pedidoPolling) { clearInterval(pedidoPolling); pedidoPolling = null; }
+    }
 }
 
 function volverCarta() {
     document.getElementById("estadoPedido").classList.remove("show");
+    if (pedidoPolling) { clearInterval(pedidoPolling); pedidoPolling = null; }
     renderProductos(document.querySelector(".cat-btn.active")?.textContent === "Todos" ? null : document.querySelector(".cat-btn.active")?.textContent);
 }
 
