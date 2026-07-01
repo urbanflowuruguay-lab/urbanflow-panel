@@ -490,6 +490,11 @@ async function enviarPedido() {
     const total = carrito.reduce((s, c) => s + c.precio * c.qty, 0);
     const items = carrito.map(c => ({ nombre: c.nombre, cantidad: c.qty, precio: c.precio }));
     console.log("=== enviarPedido ===", { empresaId, mesaToken, items, total });
+
+    const btn = document.getElementById("btnPedir");
+    btn.disabled = true;
+    btn.textContent = "Enviando...";
+
     try {
         const { data, error } = await sb.from("pedidos").insert({
             empresa_id: empresaId,
@@ -504,7 +509,9 @@ async function enviarPedido() {
         });
         if (error) {
             console.error("Error insertando pedido:", error);
-            alert("Error guardando pedido: " + error.message);
+            alert("Error: " + error.message);
+            btn.disabled = false;
+            btn.textContent = "Pedir";
             return;
         }
         console.log("Pedido guardado:", data);
@@ -514,6 +521,8 @@ async function enviarPedido() {
     } catch (e) {
         console.error("Excepcion enviarPedido:", e);
         alert("Error: " + e.message);
+        btn.disabled = false;
+        btn.textContent = "Pedir";
     }
 }
 
