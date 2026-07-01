@@ -97,8 +97,6 @@ const nombres = { cocina: "👨‍🍳 Cocina", camarero: "🍽️ Camarero", de
 if (saved && nombres[saved]) {
     document.getElementById("savedInfo").style.display = "block";
     document.getElementById("lastScreen").textContent = nombres[saved];
-    // Auto-open after 1.5s if they just tap the screen
-    setTimeout(() => { window.location.href = saved + ".html?empresa=" + empresaId; }, 1500);
 }
 
 function goTo(screen) {
