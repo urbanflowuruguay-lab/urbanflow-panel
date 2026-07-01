@@ -999,37 +999,46 @@ async function loadPerfil() {
     empresaData = { ...empresaData, ...data };
 
     const content = document.getElementById("content");
+    const logoForma = data.logo_forma || "redondo";
     content.innerHTML = `
         <div class="card">
-            <h3>Foto y Logo del Negocio</h3>
-            <div class="form-row">
-                <div style="flex:1">
-                    <label style="color:#8b949e;font-size:12px;text-transform:uppercase;display:block;margin-bottom:4px">Logo</label>
-                    <div class="upload-area" onclick="document.getElementById('logoFile').click()">
-                        <img id="logoPreview" src="${data.logo_url || ''}" style="${data.logo_url ? '' : 'display:none'}">
-                        <p id="logoPlaceholder" style="${data.logo_url ? 'display:none' : ''}">Click para subir logo</p>
+            <h3>Logo del Negocio</h3>
+            <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
+                <div style="flex:0 0 auto">
+                    <label style="color:#8b949e;font-size:12px;text-transform:uppercase;display:block;margin-bottom:4px">Subir logo</label>
+                    <div class="upload-area" onclick="document.getElementById('logoFile').click()" style="width:160px;height:160px;display:flex;align-items:center;justify-content:center">
+                        <img id="logoPreview" src="${data.logo_url || ''}" style="${data.logo_url ? 'max-width:100%;max-height:100%;object-fit:contain' : 'display:none'}">
+                        <p id="logoPlaceholder" style="${data.logo_url ? 'display:none' : ''};text-align:center;font-size:13px">Click para subir</p>
                     </div>
                     <input type="file" id="logoFile" accept="image/*" style="display:none">
-                    <div style="margin-top:8px">
-                        <label style="color:#8b949e;font-size:11px;text-transform:uppercase;display:block;margin-bottom:6px">Forma del logo</label>
-                        <div style="display:flex;gap:6px" id="logoFormaSelector">
-                            <button class="logo-forma-btn ${data.logo_forma === 'redondo' || !data.logo_forma ? 'active' : ''}" onclick="setLogoForma('redondo')" title="Redondo" style="width:36px;height:36px;border-radius:50%;border:2px solid ${data.logo_forma === 'redondo' || !data.logo_forma ? '#58a6ff' : '#30363d'};background:#21262d;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px">⭕</button>
-                            <button class="logo-forma-btn ${data.logo_forma === 'cuadrado' ? 'active' : ''}" onclick="setLogoForma('cuadrado')" title="Cuadrado" style="width:36px;height:36px;border-radius:6px;border:2px solid ${data.logo_forma === 'cuadrado' ? '#58a6ff' : '#30363d'};background:#21262d;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px">⬜</button>
-                            <button class="logo-forma-btn ${data.logo_forma === 'horizontal' ? 'active' : ''}" onclick="setLogoForma('horizontal')" title="Horizontal" style="width:44px;height:28px;border-radius:6px;border:2px solid ${data.logo_forma === 'horizontal' ? '#58a6ff' : '#30363d'};background:#21262d;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px">▬</button>
-                            <button class="logo-forma-btn ${data.logo_forma === 'vertical' ? 'active' : ''}" onclick="setLogoForma('vertical')" title="Vertical" style="width:28px;height:40px;border-radius:6px;border:2px solid ${data.logo_forma === 'vertical' ? '#58a6ff' : '#30363d'};background:#21262d;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px">▮</button>
-                        </div>
+                </div>
+                <div style="flex:0 0 auto">
+                    <label style="color:#8b949e;font-size:12px;text-transform:uppercase;display:block;margin-bottom:4px">Vista previa</label>
+                    <div id="logoShapePreview" style="width:120px;height:120px;border:2px solid #30363d;background:#21262d;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:${logoForma === 'redondo' ? '50%' : logoForma === 'cuadrado' ? '12px' : '10px'}">
+                        ${data.logo_url ? `<img src="${data.logo_url}" style="width:100%;height:100%;object-fit:cover">` : `<span style="color:#484f58;font-size:11px">Sin logo</span>`}
                     </div>
                 </div>
-                <div style="flex:1">
-                    <label style="color:#8b949e;font-size:12px;text-transform:uppercase;display:block;margin-bottom:4px">Foto del negocio</label>
-                    <div class="upload-area" onclick="document.getElementById('fotoFile').click()">
-                        <img id="fotoPreview" src="${data.foto_url || ''}" style="${data.foto_url ? '' : 'display:none'}">
-                        <p id="fotoPlaceholder" style="${data.foto_url ? 'display:none' : ''}">Click para subir foto</p>
+                <div style="flex:1;min-width:200px">
+                    <label style="color:#8b949e;font-size:12px;text-transform:uppercase;display:block;margin-bottom:8px">Forma del logo</label>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap" id="logoFormaSelector">
+                        <button class="logo-forma-btn ${logoForma === 'redondo' ? 'active' : ''}" onclick="setLogoForma('redondo')" title="Redondo" style="width:44px;height:44px;border-radius:50%;border:2px solid ${logoForma === 'redondo' ? '#58a6ff' : '#30363d'};background:#21262d;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px">⭕</button>
+                        <button class="logo-forma-btn ${logoForma === 'cuadrado' ? 'active' : ''}" onclick="setLogoForma('cuadrado')" title="Cuadrado" style="width:44px;height:44px;border-radius:8px;border:2px solid ${logoForma === 'cuadrado' ? '#58a6ff' : '#30363d'};background:#21262d;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px">⬜</button>
+                        <button class="logo-forma-btn ${logoForma === 'horizontal' ? 'active' : ''}" onclick="setLogoForma('horizontal')" title="Horizontal" style="width:52px;height:36px;border-radius:8px;border:2px solid ${logoForma === 'horizontal' ? '#58a6ff' : '#30363d'};background:#21262d;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px">▬</button>
+                        <button class="logo-forma-btn ${logoForma === 'vertical' ? 'active' : ''}" onclick="setLogoForma('vertical')" title="Vertical" style="width:36px;height:52px;border-radius:8px;border:2px solid ${logoForma === 'vertical' ? '#58a6ff' : '#30363d'};background:#21262d;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px">▮</button>
                     </div>
-                    <input type="file" id="fotoFile" accept="image/*" style="display:none">
+                    <p style="color:#8b949e;font-size:11px;margin-top:8px">Selecciona como se ve tu logo en la carta</p>
                 </div>
             </div>
-            <button class="btn btn-success" onclick="saveFotos()">Guardar Fotos</button>
+            <button class="btn btn-success" onclick="saveLogo()" style="margin-top:16px">Guardar Logo</button>
+        </div>
+        <div class="card">
+            <h3>Foto del Negocio</h3>
+            <div class="upload-area" onclick="document.getElementById('fotoFile').click()" style="max-width:400px">
+                <img id="fotoPreview" src="${data.foto_url || ''}" style="${data.foto_url ? '' : 'display:none'}">
+                <p id="fotoPlaceholder" style="${data.foto_url ? 'display:none' : ''}">Click para subir foto del negocio</p>
+            </div>
+            <input type="file" id="fotoFile" accept="image/*" style="display:none">
+            <button class="btn btn-success" onclick="saveFotoNegocio()" style="margin-top:12px">Guardar Foto</button>
         </div>
         <div class="card">
             <h3>Diseño de la Carta</h3>
@@ -1081,9 +1090,14 @@ async function loadPerfil() {
     document.getElementById("logoFile").addEventListener("change", async function() {
         const file = this.files[0];
         if (!file) return;
-        document.getElementById("logoPreview").src = URL.createObjectURL(file);
-        document.getElementById("logoPreview").style.display = "block";
+        const previewImg = document.getElementById("logoPreview");
+        const previewBox = document.getElementById("logoShapePreview");
+        previewImg.src = URL.createObjectURL(file);
+        previewImg.style.display = "block";
         document.getElementById("logoPlaceholder").style.display = "none";
+        if (previewBox) {
+            previewBox.innerHTML = `<img src="${previewImg.src}" style="width:100%;height:100%;object-fit:cover">`;
+        }
         const compressed = await compressImage(file, 400, 0.75);
         const path = `empresa_${empresaId}/logo_${Date.now()}.jpg`;
         const { data: uploadData, error } = await sb.storage.from("ocio_fotos").upload(path, compressed, { upsert: true });
@@ -1094,7 +1108,7 @@ async function loadPerfil() {
             const headerLogo = document.getElementById("headerLogo");
             headerLogo.src = urlData.publicUrl;
             headerLogo.style.display = "block";
-            applyLogoForma(currentLogoForma || empresaData.logo_forma || "redondo");
+            if (previewBox) previewBox.innerHTML = `<img src="${urlData.publicUrl}" style="width:100%;height:100%;object-fit:cover">`;
         } else {
             alert("Error subiendo logo: " + error.message);
         }
@@ -1129,25 +1143,34 @@ function setLogoForma(forma) {
     });
     event.target.closest(".logo-forma-btn").style.borderColor = "#58a6ff";
     event.target.closest(".logo-forma-btn").classList.add("active");
-    applyLogoForma(forma);
-    if (empresaId) sb.from("empresas").update({ logo_forma: forma }).eq("id", empresaId);
+    const previewBox = document.getElementById("logoShapePreview");
+    if (previewBox) {
+        const radiusMap = { redondo: "50%", cuadrado: "12px", horizontal: "10px", vertical: "10px" };
+        previewBox.style.borderRadius = radiusMap[forma] || "50%";
+    }
 }
 
 function applyLogoForma(forma) {
-    const preview = document.getElementById("logoPreview");
     const header = document.getElementById("headerLogo");
     const styles = {
-        redondo:    { radius: "50%",    w: "", h: "" },
-        cuadrado:   { radius: "12px",   w: "", h: "" },
-        horizontal: { radius: "10px",   w: "100%", h: "auto" },
-        vertical:   { radius: "10px",   w: "auto", h: "100%" }
+        redondo:    "50%",
+        cuadrado:   "12px",
+        horizontal: "10px",
+        vertical:   "10px"
     };
-    const s = styles[forma] || styles.redondo;
-    if (preview) { preview.style.borderRadius = s.radius; }
-    if (header) { header.style.borderRadius = s.radius; }
+    if (header) header.style.borderRadius = styles[forma] || "50%";
 }
 
-async function saveFotos() {
+async function saveLogo() {
+    const forma = currentLogoForma || empresaData.logo_forma || "redondo";
+    await sb.from("empresas").update({ logo_forma: forma }).eq("id", empresaId);
+    empresaData.logo_forma = forma;
+    alert("Logo guardado!");
+}
+
+async function saveFotoNegocio() {
+    alert("La foto se guarda automaticamente al subirla.");
+}
     alert("Las fotos se guardan automaticamente al subirlas.");
 }
 
