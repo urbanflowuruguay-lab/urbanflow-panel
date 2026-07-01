@@ -1021,10 +1021,10 @@ async function loadPerfil() {
                 <div style="flex:1;min-width:200px">
                     <label style="color:#8b949e;font-size:12px;text-transform:uppercase;display:block;margin-bottom:8px">Forma del logo</label>
                     <div style="display:flex;gap:8px;flex-wrap:wrap" id="logoFormaSelector">
-                        <button class="logo-forma-btn ${logoForma === 'redondo' ? 'active' : ''}" onclick="setLogoForma('redondo')" title="Redondo" style="width:44px;height:44px;border-radius:50%;border:2px solid ${logoForma === 'redondo' ? '#58a6ff' : '#30363d'};background:#21262d;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px">⭕</button>
-                        <button class="logo-forma-btn ${logoForma === 'cuadrado' ? 'active' : ''}" onclick="setLogoForma('cuadrado')" title="Cuadrado" style="width:44px;height:44px;border-radius:8px;border:2px solid ${logoForma === 'cuadrado' ? '#58a6ff' : '#30363d'};background:#21262d;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px">⬜</button>
-                        <button class="logo-forma-btn ${logoForma === 'horizontal' ? 'active' : ''}" onclick="setLogoForma('horizontal')" title="Horizontal" style="width:52px;height:36px;border-radius:8px;border:2px solid ${logoForma === 'horizontal' ? '#58a6ff' : '#30363d'};background:#21262d;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px">▬</button>
-                        <button class="logo-forma-btn ${logoForma === 'vertical' ? 'active' : ''}" onclick="setLogoForma('vertical')" title="Vertical" style="width:36px;height:52px;border-radius:8px;border:2px solid ${logoForma === 'vertical' ? '#58a6ff' : '#30363d'};background:#21262d;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px">▮</button>
+                        <button class="logo-forma-btn ${logoForma === 'redondo' ? 'active' : ''}" onclick="setLogoForma('redondo', event)" title="Redondo" style="width:44px;height:44px;border-radius:50%;border:2px solid ${logoForma === 'redondo' ? '#58a6ff' : '#30363d'};background:#21262d;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px">⭕</button>
+                        <button class="logo-forma-btn ${logoForma === 'cuadrado' ? 'active' : ''}" onclick="setLogoForma('cuadrado', event)" title="Cuadrado" style="width:44px;height:44px;border-radius:8px;border:2px solid ${logoForma === 'cuadrado' ? '#58a6ff' : '#30363d'};background:#21262d;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px">⬜</button>
+                        <button class="logo-forma-btn ${logoForma === 'horizontal' ? 'active' : ''}" onclick="setLogoForma('horizontal', event)" title="Horizontal" style="width:52px;height:36px;border-radius:8px;border:2px solid ${logoForma === 'horizontal' ? '#58a6ff' : '#30363d'};background:#21262d;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px">▬</button>
+                        <button class="logo-forma-btn ${logoForma === 'vertical' ? 'active' : ''}" onclick="setLogoForma('vertical', event)" title="Vertical" style="width:36px;height:52px;border-radius:8px;border:2px solid ${logoForma === 'vertical' ? '#58a6ff' : '#30363d'};background:#21262d;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px">▮</button>
                     </div>
                     <p style="color:#8b949e;font-size:11px;margin-top:8px">Selecciona como se ve tu logo en la carta</p>
                 </div>
@@ -1135,14 +1135,14 @@ async function loadPerfil() {
 
 let currentLogoForma = "";
 
-function setLogoForma(forma) {
+function setLogoForma(forma, evt) {
     currentLogoForma = forma;
     document.querySelectorAll(".logo-forma-btn").forEach(btn => {
         btn.style.borderColor = "#30363d";
         btn.classList.remove("active");
     });
-    event.target.closest(".logo-forma-btn").style.borderColor = "#58a6ff";
-    event.target.closest(".logo-forma-btn").classList.add("active");
+    evt.target.closest(".logo-forma-btn").style.borderColor = "#58a6ff";
+    evt.target.closest(".logo-forma-btn").classList.add("active");
     const previewBox = document.getElementById("logoShapePreview");
     if (previewBox) {
         const radiusMap = { redondo: "50%", cuadrado: "12px", horizontal: "10px", vertical: "10px" };
@@ -1170,8 +1170,6 @@ async function saveLogo() {
 
 async function saveFotoNegocio() {
     alert("La foto se guarda automaticamente al subirla.");
-}
-    alert("Las fotos se guardan automaticamente al subirlas.");
 }
 
 async function savePerfil() {
