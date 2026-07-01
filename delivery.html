@@ -235,7 +235,7 @@ async function savePhoto() {
         const base64 = window._photoData.split(",")[1];
         const ext = window._photoData.includes("png") ? "png" : "jpg";
         const fileName = "fotos/" + usuarioData.id + "." + ext;
-        const resp = await fetch("https://eyfgkopaamnkprzpwocz.supabase.co/storage/v1/object/avatars/" + fileName, {
+        const resp = await fetch("https://eyfgkopaamnkprzpwocz.supabase.co/storage/v1/object/ocio_fotos/" + fileName, {
             method: "POST",
             headers: { "apikey": SUPABASE_ANON, "Authorization": "Bearer " + SUPABASE_ANON, "Content-Type": "image/" + ext },
             body: Uint8Array.from(atob(base64), c => c.charCodeAt(0))
@@ -246,7 +246,7 @@ async function savePhoto() {
             btn.disabled = false; btn.textContent = "Guardar y continuar";
             return;
         }
-        const publicUrl = "https://eyfgkopaamnkprzpwocz.supabase.co/storage/v1/object/public/avatars/" + fileName;
+        const publicUrl = "https://eyfgkopaamnkprzpwocz.supabase.co/storage/v1/object/public/ocio_fotos/" + fileName;
         await sb.from("usuarios_empresa").update({ foto_url: publicUrl }).eq("id", usuarioData.id);
         usuarioData.foto_url = publicUrl;
         document.getElementById("forcePhotoModal").remove();
