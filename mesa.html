@@ -389,6 +389,7 @@ async function init() {
 
         sb.from("mesas").update({ estado: "ocupada" }).eq("id", mesaData.id).then(() => {});
         renderProductos();
+        checkExistingPedido();
     } catch (e) {
         document.getElementById("mainContent").innerHTML = '<div class="empty" style="padding-top:80px"><p>Error cargando carta</p></div>';
     }
@@ -623,6 +624,20 @@ async function checkPedidoStatus() {
         camareroDiv.style.display = "none";
         finalizarDiv.style.display = "block";
         if (pedidoPolling) { clearInterval(pedidoPolling); pedidoPolling = null; }
+    }
+}
+
+async function checkExistingPedido() {
+    if (!mesaToken) return;
+    const { data: pedidos } = await sb.from("pedidos").select("*").eq("mesa_token", mesaToken).order("created_at", { ascending: false }).limit(1);
+    const pedido = pedidos && pedidos.length > 0 ? pedidos[0] : null;
+    if (!pedido) return;
+    if (["recibido", "preparando", "listo", "entregado"].includes(pedido.estado)) {
+        pedidoActualId = pedido.id;
+        document.getElementById("estadoPedido").classList.add("show");
+        document.getElementById("pedidoIdDisplay").textContent = "#" + pedido.id.substring(0, 8).toUpperCase();
+        checkPedidoStatus();
+        startPedidoPolling();
     }
 }
 
