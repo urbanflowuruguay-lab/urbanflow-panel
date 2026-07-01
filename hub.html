@@ -81,32 +81,14 @@
         </a>
     </div>
 
-    <div class="saved-info" id="savedInfo" style="display:none">
-        <p>Última pantalla: <strong id="lastScreen"></strong></p>
-        <button class="clear-btn" onclick="clearSaved()">Cambiar de pantalla</button>
-    </div>
     <div class="enterprise-name" id="empName"></div>
 </body>
 <script>
 const params = new URLSearchParams(window.location.search);
 const empresaId = params.get("empresa") || "";
-const saved = localStorage.getItem("uf_last_screen_" + empresaId);
-
-const nombres = { cocina: "👨‍🍳 Cocina", camarero: "🍽️ Camarero", delivery: "🚴 Delivery", caja: "💰 Caja" };
-
-if (saved && nombres[saved]) {
-    document.getElementById("savedInfo").style.display = "block";
-    document.getElementById("lastScreen").textContent = nombres[saved];
-}
 
 function goTo(screen) {
-    localStorage.setItem("uf_last_screen_" + empresaId, screen);
     window.location.href = screen + ".html?empresa=" + empresaId;
-}
-
-function clearSaved() {
-    localStorage.removeItem("uf_last_screen_" + empresaId);
-    document.getElementById("savedInfo").style.display = "none";
 }
 </script>
 </html>
