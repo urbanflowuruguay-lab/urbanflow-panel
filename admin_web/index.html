@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - UF</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1a1a1a; margin: 0; display: flex; }
+        .sidebar { width: 250px; background-color: #0d1117; height: 100vh; color: white; padding: 20px; box-sizing: border-box; overflow-y: auto; }
+        .sidebar h2 { text-align: center; color: #58a6ff; margin-bottom: 30px; }
+        .sidebar nav a { display: block; color: #c9d1d9; text-decoration: none; padding: 12px 15px; border-radius: 5px; margin-bottom: 5px; transition: 0.3s; background: rgba(255,255,255,0.05); font-size: 13px; }
+        .sidebar nav a:hover { background-color: #21262d; border-left: 4px solid #58a6ff; color: white; }
+        .sidebar .section-title { font-size: 10px; color: #8b949e; text-transform: uppercase; margin: 15px 0 8px 5px; letter-spacing: 1px; font-weight: bold; }
+        .content { flex-grow: 1; padding: 0; height: 100vh; display: flex; flex-direction: column; }
+        iframe { width: 100%; height: 100%; border: none; flex-grow: 1; }
+        .top-bar { background: #161b22; padding: 15px 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); font-weight: bold; color: #c9d1d9; font-size: 18px; border-bottom: 1px solid #30363d; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <div style="font-size: 42px; margin-bottom: 5px;">🚖</div>
+            <h2 style="margin: 0; color: #58a6ff; font-size: 22px;">UrbanFlow</h2>
+            <p style="margin: 5px 0 0 0; color: #8b949e; font-size: 11px;">Panel de Administración</p>
+        </div>
+        
+        <nav>
+            <div class="section-title">Operaciones</div>
+            <a href="monitoreo.html" target="viewFrame">📡 Mapa en Vivo</a>
+            <a href="usuarios.html" target="viewFrame">👥 Ver Pasajeros</a>
+            <a href="choferes_autos.html" target="viewFrame">🚗 Choferes Autos</a>
+            <a href="choferes_taxis.html" target="viewFrame">🚕 Choferes Taxis</a>
+            <a href="reportes_conductores.html" target="viewFrame">📋 Reportes de Choferes</a>
+            <a href="viajes.html" target="viewFrame">🗺️ Historial de Viajes</a>
+            
+            <div class="section-title">Marketing y Herramientas</div>
+            <a href="whatsapp_masivo.html" target="viewFrame">📱 WhatsApp Masivo</a>
+            <a href="editor_registro.html" target="viewFrame">🛠️ Editor de Registro</a>
+            <a href="config_tarifas.html" target="viewFrame">💰 Config. Tarifas</a>
+            
+            <div class="section-title">Mapa y Seguridad</div>
+            <a href="mapa_eventos.html" target="viewFrame">🗺️ Zonas y Eventos</a>
+            <a href="editor_fronteras.html" target="viewFrame">📐 Fronteras Depts</a>
+            <a href="alertas_zonas.html" target="viewFrame">🚦 Alertas y Seguridad</a>
+            <a href="crash_logs.html" target="viewFrame">📊 Logs de Crash</a>
+            <a href="configuracion.html" target="viewFrame">⚙️ Configuración</a>
+            <a href="cancelaciones.html" target="viewFrame">⏱️ Cancelaciones</a>
+
+            <div class="section-title" style="color: #f2cc60;">💼 Guías</div>
+            <a href="guia_ocio.html" target="viewFrame" style="background: rgba(233, 30, 99, 0.1);">🎭 Guía del Ocio</a>
+
+            <div class="section-title" style="color: #7ee787;">🏪 E-Commerce</div>
+            <a href="empresas.html" target="viewFrame" style="background: rgba(35, 134, 54, 0.1);">🏢 Gestionar Empresas</a>
+
+            <div class="section-title" style="color: #f0883e;">🧪 Testing</div>
+            <a href="testing_completo.html" target="viewFrame" style="background: rgba(240, 136, 62, 0.1);">🧪 Testing del Sistema</a>
+        </nav>
+    </div>
+
+    <div class="content">
+        <div class="top-bar" id="viewTitle">Panel de Administración</div>
+        <iframe name="viewFrame" src="monitoreo.html" id="viewFrame"></iframe>
+    </div>
+
+    <script>
+        const links = document.querySelectorAll('nav a');
+        const title = document.getElementById('viewTitle');
+        links.forEach(link => {
+            link.addEventListener('click', () => {
+                title.innerText = link.innerText;
+            });
+        });
+    </script>
+
+</body>
+</html>
