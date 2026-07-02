@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Testing Completo - UrbanFlow</title>
+    <style>
+        @media print {
+            body { font-size: 11px; }
+            .no-print { display: none !important; }
+            .page-break { page-break-before: always; }
+            .section { page-break-inside: avoid; }
+            input[type="checkbox"] { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f5f5f5; color: #1a1a1a; }
+        .toolbar { position: sticky; top: 0; z-index: 100; background: #1a1a2e; color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+        .toolbar h1 { font-size: 18px; }
+        .toolbar-btns { display: flex; gap: 8px; }
+        .toolbar-btns button { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; }
+        .btn-print { background: #1f6feb; color: white; }
+        .btn-reset { background: #da3633; color: white; }
+        .btn-export { background: #238636; color: white; }
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+        .summary-bar { background: white; border-radius: 10px; padding: 16px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); display: flex; gap: 20px; flex-wrap: wrap; }
+        .summary-item { text-align: center; flex: 1; min-width: 100px; }
+        .summary-item .num { font-size: 28px; font-weight: 700; }
+        .summary-item .label { font-size: 11px; color: #666; text-transform: uppercase; }
+        .summary-item.total .num { color: #333; }
+        .summary-item.ok .num { color: #238636; }
+        .summary-item.fail .num { color: #da3633; }
+        .summary-item.pending .num { color: #f0883e; }
+        .summary-item.pct .num { color: #1f6feb; }
+        .nav-sidebar { position: fixed; left: 0; top: 56px; bottom: 0; width: 220px; background: #161b22; overflow-y: auto; padding: 10px 0; z-index: 50; }
+        .nav-sidebar a { display: block; padding: 8px 16px; color: #8b949e; text-decoration: none; font-size: 12px; border-left: 3px solid transparent; }
+        .nav-sidebar a:hover, .nav-sidebar a.active { color: #58a6ff; background: #0d1117; border-left-color: #58a6ff; }
+        .nav-sidebar .nav-title { padding: 8px 16px; color: #c9d1d9; font-size: 13px; font-weight: 700; }
+        .main { margin-left: 220px; padding: 20px; }
+        .section { background: white; border-radius: 10px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); overflow: hidden; }
+        .section-header { padding: 12px 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+        .section-header h2 { font-size: 15px; display: flex; align-items: center; gap: 8px; }
+        .section-header .badge { padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+        .section-header .badge-pers { background: #1f6feb22; color: #1f6feb; }
+        .section-header .badge-count { background: #f0f0f0; color: #666; }
+        .section-header .arrow { transition: transform 0.2s; }
+        .section-header.collapsed .arrow { transform: rotate(-90deg); }
+        .section-body { padding: 0 16px 16px; }
+        .section-body.hidden { display: none; }
+        .perspective { margin-bottom: 12px; }
+        .perspective-header { font-size: 13px; font-weight: 700; color: #58a6ff; padding: 6px 0; border-bottom: 1px solid #eee; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f8f9fa; font-size: 11px; padding: 6px 8px; text-align: left; border-bottom: 2px solid #dee2e6; }
+        th.num { width: 30px; }
+        th.chk { width: 60px; text-align: center; }
+        th.obs { width: auto; }
+        td { font-size: 12px; padding: 6px 8px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+        td.num { text-align: center; color: #999; }
+        td.chk { text-align: center; }
+        td.chk input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
+        td.obs input[type="text"] { width: 100%; border: 1px solid #ddd; border-radius: 4px; padding: 4px 6px; font-size: 11px; }
+        tr:hover { background: #f8f9ff; }
+        tr input[type="checkbox"]:checked + span { text-decoration: line-through; color: #999; }
+        .test-desc { font-size: 11px; color: #666; padding: 2px 0 8px; border-bottom: 1px dashed #eee; margin-bottom: 8px; }
+        .step-list { margin: 4px 0 8px 16px; }
+        .step-list li { font-size: 11px; color: #555; margin-bottom: 2px; }
+        .completion-banner { display: none; text-align: center; padding: 30px; border-radius: 12px; margin-bottom: 20px; }
+        .completion-banner.show { display: block; }
+        .completion-banner.success { background: linear-gradient(135deg, #1a472a, #238636); color: white; }
+        .completion-banner.warning { background: linear-gradient(135deg, #5a3e00, #f0883e); color: white; }
+        .completion-icon { font-size: 48px; margin-bottom: 10px; }
+        .completion-banner h2 { font-size: 20px; margin-bottom: 6px; }
+        .completion-banner p { font-size: 14px; opacity: 0.9; }
+        .failed-section { background: white; border-radius: 10px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+        .failed-section h3 { font-size: 14px; color: #da3633; margin-bottom: 10px; }
+        .fail-item { padding: 6px 0; border-bottom: 1px solid #f0f0f0; font-size: 12px; }
+        .fail-item:last-child { border-bottom: none; }
+        .fail-sec { background: #da363322; color: #da3633; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; }
+        .fail-item em { color: #888; }
+        .last-saved { font-size: 10px; color: #888; text-align: center; margin-top: 8px; }
+        @media (max-width: 768px) {
+            .nav-sidebar { display: none; }
+            .main { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="toolbar no-print">
+    <h1>🧪 Testing UrbanFlow - Checklist Completo</h1>
+    <div class="toolbar-btns">
+        <button class="btn-reset" onclick="resetAll()">🔄 Limpiar</button>
+        <button class="btn-export" onclick="exportResults()">📊 Exportar</button>
+        <button class="btn-print" onclick="window.print()">🖨️ Imprimir</button>
+    </div>
+</div>
+
+<div class="nav-sidebar no-print" id="navSidebar">
+    <div class="nav-title">Secciones</div>
+    <a href="#sec-vis-general">Visión General</a>
+    <a href="#sec-login">Login y Auth</a>
+    <a href="#sec-pasajero">Pasajero</a>
+    <a href="#sec-pedidos">Pedidos (Web)</a>
+    <a href="#sec-tracking">Tracking Cliente</a>
+    <a href="#sec-caja">Caja</a>
+    <a href="#sec-cocina">Cocina</a>
+    <a href="#sec-camarero">Camarero</a>
+    <a href="#sec-delivery">Delivery</a>
+    <a href="#sec-mesa">Mesa (QR)</a>
+    <a href="#sec-admin">Admin Panel</a>
+    <a href="#sec-chat">Chat</a>
+    <a href="#sec-gps">GPS y Mapas</a>
+    <a href="#sec-edge">Casos Borde</a>
+</div>
+
+<div class="main">
+    <div id="completionBanner" class="completion-banner"></div>
+
+    <div class="summary-bar" id="summaryBar">
+        <div class="summary-item total"><div class="num" id="sTotal">0</div><div class="label">Total</div></div>
+        <div class="summary-item ok"><div class="num" id="sOk">0</div><div class="label">Funciona</div></div>
+        <div class="summary-item fail"><div class="num" id="sFail">0</div><div class="label">No funciona</div></div>
+        <div class="summary-item pending"><div class="num" id="sPending">0</div><div class="label">Pendiente</div></div>
+        <div class="summary-item pct"><div class="num" id="sPct">0%</div><div class="label">Aprobado</div></div>
+    </div>
+
+    <!-- ==================== 1. VISION GENERAL ==================== -->
+    <div class="section" id="sec-vis-general">
+        <div class="section-header" onclick="toggleSection(this)">
+            <h2>📋 Visión General del Sistema</h2>
+            <span class="badge badge-count" data-count>0 pruebas</span>
+            <span class="arrow">▼</span>
+        </div>
+        <div class="section-body">
+            <div class="test-desc">Verificar que todos los componentes del sistema existen y están accesibles</div>
+            <table>
+                <tr><th class="num">#</th><th>Prueba</th><th class="chk">✓</th><th class="chk">✗</th><th class="obs">Observación</th></tr>
+                <tr><td class="num">1</td><td>pedidos.html carga correctamente</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                <tr><td class="num">2</td><td>tracking.html carga correctamente</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                <tr><td class="num">3</td><td>caja.html carga correctamente</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                <tr><td class="num">4</td><td>cocina.html carga correctamente</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                <tr><td class="num">5</td><td>camarero.html carga correctamente</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                <tr><td class="num">6</td><td>delivery.html carga correctamente</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                <tr><td class="num">7</td><td>mesa.html carga correctamente</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                <tr><td class="num">8</td><td>hub.html carga y muestra 5 botones</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                <tr><td class="num">9</td><td>index.html (admin) carga correctamente</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                <tr><td class="num">10</td><td>Supabase conecta (no hay errores en consola)</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                <tr><td class="num">11</td><td>Tablas SQL existen: pedidos, mensajes_chat, usuarios_empresa, categorias_empresa, productos_empresa, mesas, calificaciones</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                <tr><td class="num">12</td><td>Columnas GPS en pedidos: delivery_lat, delivery_lon, palabra_secreta, started_at, ready_at, delivered_at</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- ==================== 2. LOGIN ==================== -->
+    <div class="section" id="sec-login">
+        <div class="section-header" onclick="toggleSection(this)">
+            <h2>🔐 Login y Autenticación</h2>
+            <span class="badge badge-count" data-count>0 pruebas</span>
+            <span class="arrow">▼</span>
+        </div>
+        <div class="section-body">
+            <div class="perspective">
+                <div class="perspective-header">👤 Pasajero (App)</div>
+                <table>
+                    <tr><th class="num">#</th><th>Prueba</th><th class="chk">✓</th><th class="chk">✗</th><th class="obs">Obs</th></tr>
+                    <tr><td class="num">1</td><td>Login con email y contraseña funciona</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">2</td><td>Usuario incorrecto muestra error</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">3</td><td>Contraseña incorrecta muestra error</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">4</td><td>Sesión persiste al cerrar y abrir app</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">5</td><td>Cerrar sesión borra datos</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                </table>
+            </div>
+            <div class="perspective">
+                <div class="perspective-header">🍽️ Trabajadores (Panel Web: cocina, camarero, delivery, caja)</div>
+                <table>
+                    <tr><th class="num">#</th><th>Prueba</th><th class="chk">✓</th><th class="chk">✗</th><th class="obs">Obs</th></tr>
+                    <tr><td class="num">1</td><td>Login con Nombre + PIN de 4 dígitos</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">2</td><td>PIN incorrecto muestra error</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">3</td><td>Nombre no registrado muestra error</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">4</td><td>Rol incorrecto bloquea acceso (ej: camarero no entra a delivery)</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">5</td><td>Cambiar PIN funciona</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">6</td><td>Delivery/camarero sin foto no puede entrar</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">7</td><td>Subir foto funciona (se guarda en Supabase Storage)</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">8</td><td>Foto aparece en header después de subir</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">9</td><td>Autocomplete desactivado en campos de login</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                </table>
+            </div>
+            <div class="perspective">
+                <div class="perspective-header">⚙️ Admin (Panel Web)</div>
+                <table>
+                    <tr><th class="num">#</th><th>Prueba</th><th class="chk">✓</th><th class="chk">✗</th><th class="obs">Obs</th></tr>
+                    <tr><td class="num">1</td><td>Login con Email + Contraseña (Supabase Auth)</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">2</td><td>Email incorrecto muestra error</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">3</td><td>Contraseña incorrecta muestra error</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">4</td><td>Email del admin logueado se muestra en header</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">5</td><td>"Cerrar Sesión" funciona</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 3. PASAJERO ==================== -->
+    <div class="section" id="sec-pasajero">
+        <div class="section-header" onclick="toggleSection(this)">
+            <h2>📱 Pasajero - App Móvil</h2>
+            <span class="badge badge-count" data-count>0 pruebas</span>
+            <span class="arrow">▼</span>
+        </div>
+        <div class="section-body">
+            <div class="perspective">
+                <div class="perspective-header">🏠 Home y Navegación</div>
+                <table>
+                    <tr><th class="num">#</th><th>Prueba</th><th class="chk">✓</th><th class="chk">✗</th><th class="obs">Obs</th></tr>
+                    <tr><td class="num">1</td><td>Saludo personalizado con nombre del usuario</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">2</td><td>Grid de opciones: Transporte, Guía Ocio, Guía Comercial</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">3</td><td>Bottom nav: Home, Mapa, QR, Perfil</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">4</td><td>Modo día/noche funciona</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">5</td><td>Mapa muestra ubicación actual del usuario</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">6</td><td>Ícono del coche en el mapa se ve correcto</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">7</td><td>Botón centrar mapa funciona</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                </table>
+            </div>
+            <div class="perspective">
+                <div class="perspective-header">🔍 Búsqueda de Destino</div>
+                <table>
+                    <tr><th class="num">#</th><th>Prueba</th><th class="chk">✓</th><th class="chk">✗</th><th class="obs">Obs</th></tr>
+                    <tr><td class="num">1</td><td>Escribir destino muestra sugerencias</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">2</td><td>Seleccionar sugerencia llena el campo</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">3</td><td>Origen se llena con ubicación GPS automáticamente</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">4</td><td>Ruta se dibuja en el mapa</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">5</td><td>Ícono de destino aparece en el mapa</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">6</td><td>Precio estimado se muestra</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">7</td><td>Botón "Buscar coche" funciona</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                </table>
+            </div>
+            <div class="perspective">
+                <div class="perspective-header">❤️ Favoritos</div>
+                <table>
+                    <tr><th class="num">#</th><th>Prueba</th><th class="chk">✓</th><th class="chk">✗</th><th class="obs">Obs</th></tr>
+                    <tr><td class="num">1</td><td>Agregar favorito funciona</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">2</td><td>Icono se auto-detecta (casa, trabajo, etc)</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">3</td><td>Eliminar favorito funciona</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">4</td><td>Favorito setea destino al hacer click</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">5</td><td>Contraste día/noche funciona en favoritos</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                </table>
+            </div>
+            <div class="perspective">
+                <div class="perspective-header">🚗 Viaje</div>
+                <table>
+                    <tr><th class="num">#</th><th>Prueba</th><th class="chk">✓</th><th class="chk">✗</th><th class="obs">Obs</th></tr>
+                    <tr><td class="num">1</td><td>Se busca chofer disponible</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">2</td><td>Chofer acepta viaje → se muestra info</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">3</td><td>Foto del chofer se muestra</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">4</td><td>Ubicación del chofer se actualiza en tiempo real</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">5</td><td>Ruta del chofer se dibuja</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">6</td><td>Cancelar viaje funciona con razón</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">7</td><td>Persiste viaje activo al cerrar app</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 4. PEDIDOS WEB ==================== -->
+    <div class="section" id="sec-pedidos">
+        <div class="section-header" onclick="toggleSection(this)">
+            <h2>🛒 Pedidos - Navegación Web (pedidos.html)</h2>
+            <span class="badge badge-pers">👤 Pasajero</span>
+            <span class="badge badge-count" data-count>0 pruebas</span>
+            <span class="arrow">▼</span>
+        </div>
+        <div class="section-body">
+            <div class="perspective">
+                <div class="perspective-header">🔍 Búsqueda de Productos</div>
+                <table>
+                    <tr><th class="num">#</th><th>Prueba</th><th class="chk">✓</th><th class="chk">✗</th><th class="obs">Obs</th></tr>
+                    <tr><td class="num">1</td><td>Pide permiso de ubicación</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">2</td><td>Muestra restaurantes cercanos con foto</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">3</td><td>Muestra distancia al restaurante (m/km)</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">4</td><td>Scroll horizontal de restaurantes funciona</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">5</td><td>Buscar "pizza" muestra productos de todos los negocios</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">6</td><td>Buscar por nombre de restaurante filtra</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">7</td><td>Click en restaurante filtra sus productos</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">8</td><td>Productos muestran foto, nombre, precio, restaurante</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">9</td><td>Solo muestra negocios activos y aprobados</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                </table>
+            </div>
+            <div class="perspective">
+                <div class="perspective-header">📦 Detalle de Producto y Carrito</div>
+                <table>
+                    <tr><th class="num">#</th><th>Prueba</th><th class="chk">✓</th><th class="chk">✗</th><th class="obs">Obs</th></tr>
+                    <tr><td class="num">1</td><td>Click en producto abre modal con foto grande</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">2</td><td>Muestra nombre, restaurante, categorías, precio</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">3</td><td>Leyenda "¿Necesitas solo esto o algo más?" visible</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">4</td><td>Cambiar cantidad (+ / -) actualiza precio</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">5</td><td>"Agregar al pedido" agrega al carrito</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">6</td><td>Quick add (+) funciona desde la grilla</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">7</td><td>Barra inferior muestra cantidad y total</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">8</td><td>Abrir carrito muestra productos correctos</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">9</td><td>Cambiar cantidad en carrito funciona</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">10</td><td>Nota opcional funciona</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">11</td><td>Total se calcula correctamente</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                </table>
+            </div>
+            <div class="perspective">
+                <div class="perspective-header">📤 Envío de Pedido</div>
+                <table>
+                    <tr><th class="num">#</th><th>Prueba</th><th class="chk">✓</th><th class="chk">✗</th><th class="obs">Obs</th></tr>
+                    <tr><td class="num">1</td><td>"Pedir ahora" envía pedido a Supabase</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">2</td><td>Botón muestra "Enviando..." durante envío</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">3</td><td>Pantalla confirmación "Pedido enviado"</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">4</td><td>Botón "Seguir mi pedido" abre tracking</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">5</td><td>Pedido llega a caja con datos correctos</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">6</td><td>Fallback HTTP funciona si SDK falla</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 5. TRACKING ==================== -->
+    <div class="section" id="sec-tracking">
+        <div class="section-header" onclick="toggleSection(this)">
+            <h2>📍 Tracking Cliente (tracking.html)</h2>
+            <span class="badge badge-pers">👤 Pasajero</span>
+            <span class="badge badge-count" data-count>0 pruebas</span>
+            <span class="arrow">▼</span>
+        </div>
+        <div class="section-body">
+            <div class="perspective">
+                <div class="perspective-header">🗺️ Mapa y Estado</div>
+                <table>
+                    <tr><th class="num">#</th><th>Prueba</th><th class="chk">✓</th><th class="chk">✗</th><th class="obs">Obs</th></tr>
+                    <tr><td class="num">1</td><td>Mapa carga con ubicación del cliente</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">2</td><td>Punto azul = ubicación del cliente</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">3</td><td>Punto naranja = delivery (cuando está en camino)</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">4</td><td>Punto del delivery se mueve en tiempo real</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">5</td><td>Distancia y ETA se muestran</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">6</td><td>Nombre del delivery se muestra</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">7</td><td>Barra de estado cambia según fase (preparando/listo/en camino/entregado)</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">8</td><td>Polling cada 5 segundos funciona</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                </table>
+            </div>
+            <div class="perspective">
+                <div class="perspective-header">💬 Chat y Palabra Secreta</div>
+                <table>
+                    <tr><th class="num">#</th><th>Prueba</th><th class="chk">✓</th><th class="chk">✗</th><th class="obs">Obs</th></tr>
+                    <tr><td class="num">1</td><td>Enviar mensaje al delivery funciona</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">2</td><td>Delivery recibe el mensaje</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">3</td><td>Mensajes automáticos se ven diferentes (estilo especial)</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">4</td><td>Cuando delivery llega → aparece sección palabra secreta</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">5</td><td>Palabra incorrecta → error</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">6</td><td>Palabra correcta → pedido se cierra</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">7</td><td>Aparece calificación con estrellas</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">8</td><td>Calificación se guarda en tabla calificaciones</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">9</td><td>Botón "Volver a pedir" funciona</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 6. CAJA ==================== -->
+    <div class="section" id="sec-caja">
+        <div class="section-header" onclick="toggleSection(this)">
+            <h2>💰 Caja (caja.html)</h2>
+            <span class="badge badge-pers">💵 Caja</span>
+            <span class="badge badge-count" data-count>0 pruebas</span>
+            <span class="arrow">▼</span>
+        </div>
+        <div class="section-body">
+            <div class="perspective">
+                <div class="perspective-header">📋 Gestión de Pedidos</div>
+                <table>
+                    <tr><th class="num">#</th><th>Prueba</th><th class="chk">✓</th><th class="chk">✗</th><th class="obs">Obs</th></tr>
+                    <tr><td class="num">1</td><td>Pedido nuevo aparece con estado RECIBIDO</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">2</td><td>"🍳 A cocina" envía pedido a cocina</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">3</td><td>Chat automático "Tu pedido se está preparando"</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">4</td><td>Resumen: por cobrar / cobrado / devoluciones</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">5</td><td>Auto-refresh cada 8 segundos</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                </table>
+            </div>
+            <div class="perspective">
+                <div class="perspective-header">🚴 Asignar Delivery</div>
+                <table>
+                    <tr><th class="num">#</th><th>Prueba</th><th class="chk">✓</th><th class="chk">✗</th><th class="obs">Obs</th></tr>
+                    <tr><td class="num">1</td><td>Pedido LISTO muestra "🚴 Asignar Delivery"</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">2</td><td>Modal muestra deliverys disponibles</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">3</td><td>Seleccionar delivery genera palabra secreta</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">4</td><td>Chat automático a delivery con palabra</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">5</td><td>Chat automático a cliente "va en camino"</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">6</td><td>"🗺️ Ver mapa" muestra ubicación del delivery</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">7</td><td>Mapa se actualiza cada 5 segundos</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">8</td><td>Distancia y ETA se muestran en mapa</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                </table>
+            </div>
+            <div class="perspective">
+                <div class="perspective-header">💰 Cobrar y Devolver</div>
+                <table>
+                    <tr><th class="num">#</th><th>Prueba</th><th class="chk">✓</th><th class="chk">✗</th><th class="obs">Obs</th></tr>
+                    <tr><td class="num">1</td><td>"💰 Cobrar" cambia estado a PAGADO</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">2</td><td>Aparece en pestaña "Cobrados"</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">3</td><td>"↩️ Devolver" cambia a DEVUELTO con confirmación</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">4</td><td>Resumen se actualiza al cobrar/devolver</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">5</td><td>📞 Llamar a delivery funciona</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">6</td><td>📞 Llamar a cliente funciona</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 7. COCINA ==================== -->
+    <div class="section" id="sec-cocina">
+        <div class="section-header" onclick="toggleSection(this)">
+            <h2>🍳 Cocina (cocina.html)</h2>
+            <span class="badge badge-pers">👨‍🍳 Cocina</span>
+            <span class="badge badge-count" data-count>0 pruebas</span>
+            <span class="arrow">▼</span>
+        </div>
+        <div class="section-body">
+            <div class="perspective">
+                <div class="perspective-header">📋 Gestión de Pedidos</div>
+                <table>
+                    <tr><th class="num">#</th><th>Prueba</th><th class="chk">✓</th><th class="chk">✗</th><th class="obs">Obs</th></tr>
+                    <tr><td class="num">1</td><td>Pedidos nuevos aparecen con badge NUEVO</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">2</td><td>Sonido cuando llega pedido nuevo</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">3</td><td>"En preparación" cambia a PREPARANDO</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">4</td><td>"✅ Listo" cambia estado y envía chats</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">5</td><td>Chat automático a caja "pedido listo"</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">6</td><td>Chat automático a cliente "pedido listo"</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">7</td><td>Polling cada 10 segundos</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">8</td><td>Tiempo transcurrido se muestra</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">9</td><td>Stats: Nuevos / Preparando / Listos</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                </table>
+            </div>
+            <div class="perspective">
+                <div class="perspective-header">🧹 Mesas para Limpiar</div>
+                <table>
+                    <tr><th class="num">#</th><th>Prueba</th><th class="chk">✓</th><th class="chk">✗</th><th class="obs">Obs</th></tr>
+                    <tr><td class="num">1</td><td>Mesas en limpieza aparecen en cocina</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">2</td><td>"✔️ Lista" cambia estado a disponible</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                </table>
+            </div>
+            <div class="perspective">
+                <div class="perspective-header">📜 Historial</div>
+                <table>
+                    <tr><th class="num">#</th><th>Prueba</th><th class="chk">✓</th><th class="chk">✗</th><th class="obs">Obs</th></tr>
+                    <tr><td class="num">1</td><td>Historial muestra pedidos completados</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">2</td><td>Tiempos (asignado → listo) se muestran</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">3</td><td>Comentarios se guardan</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 8. CAMARERO ==================== -->
+    <div class="section" id="sec-camarero">
+        <div class="section-header" onclick="toggleSection(this)">
+            <h2>🍽️ Camarero (camarero.html)</h2>
+            <span class="badge badge-pers">🍽️ Camarero</span>
+            <span class="badge badge-count" data-count>0 pruebas</span>
+            <span class="arrow">▼</span>
+        </div>
+        <div class="section-body">
+            <div class="perspective">
+                <div class="perspective-header">📋 Pedidos y Mesas</div>
+                <table>
+                    <tr><th class="num">#</th><th>Prueba</th><th class="chk">✓</th><th class="chk">✗</th><th class="obs">Obs</th></tr>
+                    <tr><td class="num">1</td><td>Pedidos listos aparecen para entregar</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">2</td><td>"✅ Entregado a mesa" funciona</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">3</td><td>Grid de mesas con colores (verde/rojo/amarillo)</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">4</td><td>Abrir mesa funciona</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">5</td><td>Liberar mesa funciona</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">6</td><td>Marcar "limpieza" funciona</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">7</td><td>Foto del camarero forzada al login</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">8</td><td>Tiempo de delivery se muestra</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">9</td><td>Historial muestra pedidos entregados</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 9. DELIVERY ==================== -->
+    <div class="section" id="sec-delivery">
+        <div class="section-header" onclick="toggleSection(this)">
+            <h2>🚴 Delivery (delivery.html)</h2>
+            <span class="badge badge-pers">🚴 Delivery</span>
+            <span class="badge badge-count" data-count>0 pruebas</span>
+            <span class="arrow">▼</span>
+        </div>
+        <div class="section-body">
+            <div class="perspective">
+                <div class="perspective-header">📦 Pedidos Activos</div>
+                <table>
+                    <tr><th class="num">#</th><th>Prueba</th><th class="chk">✓</th><th class="chk">✗</th><th class="obs">Obs</th></tr>
+                    <tr><td class="num">1</td><td>Pedidos listos aparecen como DISPONIBLE</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">2</td><td>"📦 Tomar pedido" funciona</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">3</td><td>Chat automático "Voy camino a buscar tu pedido"</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">4</td><td>Palabra secreta se muestra</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">5</td><td>Dirección se muestra correctamente</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                </table>
+            </div>
+            <div class="perspective">
+                <div class="perspective-header">🗺️ Navegación y GPS</div>
+                <table>
+                    <tr><th class="num">#</th><th>Prueba</th><th class="chk">✓</th><th class="chk">✗</th><th class="obs">Obs</th></tr>
+                    <tr><td class="num">1</td><td>GPS se activa al entrar (barra verde)</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">2</td><td>Barra roja si GPS apagado</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">3</td><td>GPS actualiza posición cada 5 segundos</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">4</td><td>Posición se guarda en pedidos (delivery_lat/lon)</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">5</td><td>"🗺️ Navegar" abre Google Maps</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">6</td><td>Mapa en la app muestra ubicación actual</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                </table>
+            </div>
+            <div class="perspective">
+                <div class="perspective-header">📍 Entrega y Problemas</div>
+                <table>
+                    <tr><th class="num">#</th><th>Prueba</th><th class="chk">✓</th><th class="chk">✗</th><th class="obs">Obs</th></tr>
+                    <tr><td class="num">1</td><td>"📍 Llegué" notifica al cliente</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">2</td><td>"✅ Entregado" abre modal palabra</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">3</td><td>Palabra incorrecta → error</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">4</td><td>Palabra correcta → ENTREGADO + chat "entregado"</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">5</td><td>"⚠️ Problema" pide motivo y envía a caja</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">6</td><td>Pedido se quita de activos tras problema</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">7</td><td>Mapa se cierra al completar/Problema</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                </table>
+            </div>
+            <div class="perspective">
+                <div class="perspective-header">💬 Chat</div>
+                <table>
+                    <tr><th class="num">#</th><th>Prueba</th><th class="chk">✓</th><th class="chk">✗</th><th class="obs">Obs</th></tr>
+                    <tr><td class="num">1</td><td>Abrir chat con caja funciona</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">2</td><td>Enviar mensaje funciona</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">3</td><td>Caja recibe el mensaje</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">4</td><td>Polling chat cada 3 segundos</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                </table>
+            </div>
+            <div class="perspective">
+                <div class="perspective-header">📜 Historial</div>
+                <table>
+                    <tr><th class="num">#</th><th>Prueba</th><th class="chk">✓</th><th class="chk">✗</th><th class="obs">Obs</th></tr>
+                    <tr><td class="num">1</td><td>Historial muestra pedidos propios</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">2</td><td>Tiempos (asignado → entregado) se muestran</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">3</td><td>Duración del delivery se calcula</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">4</td><td>Comentarios se guardan y muestran</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 10. MESA ==================== -->
+    <div class="section" id="sec-mesa">
+        <div class="section-header" onclick="toggleSection(this)">
+            <h2>🍽️ Mesa - Pedido desde QR (mesa.html)</h2>
+            <span class="badge badge-pers">👤 Cliente en mesa</span>
+            <span class="badge badge-count" data-count>0 pruebas</span>
+            <span class="arrow">▼</span>
+        </div>
+        <div class="section-body">
+            <div class="perspective">
+                <div class="perspective-header">🚪 Portada y Menú</div>
+                <table>
+                    <tr><th class="num">#</th><th>Prueba</th><th class="chk">✓</th><th class="chk">✗</th><th class="obs">Obs</th></tr>
+                    <tr><td class="num">1</td><td>QR abre mesa.html con token correcto</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">2</td><td>Portada muestra tema del restaurante</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">3</td><td>Rating promedio se muestra en portada</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">4</td><td>"ENTRAR" abre menú</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">5</td><td>Categorías dinámicas se muestran</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">6</td><td>Productos con foto y precio</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">7</td><td>Solo productos activos se muestran</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                </table>
+            </div>
+            <div class="perspective">
+                <div class="perspective-header">📤 Pedido</div>
+                <table>
+                    <tr><th class="num">#</th><th>Prueba</th><th class="chk">✓</th><th class="chk">✗</th><th class="obs">Obs</th></tr>
+                    <tr><td class="num">1</td><td>"Pedir" envía pedido con "Mesa #X"</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">2</td><td>Pedido llega a caja</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">3</td><td>Pantalla de confirmación se muestra</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">4</td><td>Estado se actualiza en mesa.html (polling)</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">5</td><td>Foto del camarero aparece cuando listo</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">6</td><td>"FINALIZAR" solo aparece cuando entregado</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">7</td><td>Calificación funciona</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">8</td><td>Refrescar página recupera pedido activo</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 11. ADMIN ==================== -->
+    <div class="section" id="sec-admin">
+        <div class="section-header" onclick="toggleSection(this)">
+            <h2>⚙️ Admin Panel (index.html)</h2>
+            <span class="badge badge-pers">⚙️ Admin</span>
+            <span class="badge badge-count" data-count>0 pruebas</span>
+            <span class="arrow">▼</span>
+        </div>
+        <div class="section-body">
+            <div class="perspective">
+                <div class="perspective-header">📊 Dashboard</div>
+                <table>
+                    <tr><th class="num">#</th><th>Prueba</th><th class="chk">✓</th><th class="chk">✗</th><th class="obs">Obs</th></tr>
+                    <tr><td class="num">1</td><td>Estadísticas: total pedidos, hoy, ingresos</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">2</td><td>Pedidos recientes se muestran</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">3</td><td>Filtros de pedidos funcionan</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                </table>
+            </div>
+            <div class="perspective">
+                <div class="perspective-header">🍽️ Gestión</div>
+                <table>
+                    <tr><th class="num">#</th><th>Prueba</th><th class="chk">✓</th><th class="chk">✗</th><th class="obs">Obs</th></tr>
+                    <tr><td class="num">1</td><td>CRUD de usuarios (cocina/camarero/delivery/caja)</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">2</td><td>CRUD de productos funciona</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">3</td><td>Activar/desactivar productos</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">4</td><td>Categorías dinámicas CRUD</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">5</td><td>QR de mesas se muestra/descarga</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">6</td><td>Reservas: confirmar/rechazar/asignar mesa</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">7</td><td>Control personal muestra trabajadores</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">8</td><td>Perfil: editar nombre, dirección, logo, foto</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">9</td><td>Logo forma (redondo/cuadrado/horizontal/vertical)</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 12. CHAT ==================== -->
+    <div class="section" id="sec-chat">
+        <div class="section-header" onclick="toggleSection(this)">
+            <h2>💬 Chat - Sistema de Mensajería</h2>
+            <span class="badge badge-count" data-count>0 pruebas</span>
+            <span class="arrow">▼</span>
+        </div>
+        <div class="section-body">
+            <div class="perspective">
+                <div class="perspective-header">🤖 Mensajes Automáticos</div>
+                <table>
+                    <tr><th class="num">#</th><th>Prueba</th><th class="chk">✓</th><th class="chk">✗</th><th class="obs">Obs</th></tr>
+                    <tr><td class="num">1</td><td>Cocina "Listo" → chat a caja "pedido listo"</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">2</td><td>Cocina "Listo" → chat a cliente "pedido listo"</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">3</td><td>Caja "A cocina" → chat a cliente "preparando"</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">4</td><td>Caja asigna delivery → chat a delivery con palabra</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">5</td><td>Caja asigna delivery → chat a cliente "va en camino"</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">6</td><td>Delivery "Llegué" → chat a cliente "en la puerta"</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">7</td><td>Delivery "Entregado" → chat a cliente "entregado"</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">8</td><td>Delivery "Problema" → chat a caja con motivo</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                </table>
+            </div>
+            <div class="perspective">
+                <div class="perspective-header">💬 Chat Manual</div>
+                <table>
+                    <tr><th class="num">#</th><th>Prueba</th><th class="chk">✓</th><th class="chk">✗</th><th class="obs">Obs</th></tr>
+                    <tr><td class="num">1</td><td>Caja → Delivery funciona</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">2</td><td>Delivery → Caja funciona</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">3</td><td>Cliente → Delivery funciona</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">4</td><td>Delivery → Cliente funciona</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">5</td><td>Polling funciona (3-4 segundos)</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">6</td><td>Mensajes se guardan en mensajes_chat</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 13. GPS ==================== -->
+    <div class="section" id="sec-gps">
+        <div class="section-header" onclick="toggleSection(this)">
+            <h2>🗺️ GPS y Mapas</h2>
+            <span class="badge badge-count" data-count>0 pruebas</span>
+            <span class="arrow">▼</span>
+        </div>
+        <div class="section-body">
+            <div class="perspective">
+                <table>
+                    <tr><th class="num">#</th><th>Prueba</th><th class="chk">✓</th><th class="chk">✗</th><th class="obs">Obs</th></tr>
+                    <tr><td class="num">1</td><td>Delivery actualiza GPS cada 5 segundos</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">2</td><td>Caja ve ubicación del delivery en mapa</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">3</td><td>Cliente ve ubicación del delivery en tracking</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">4</td><td>Punto del delivery se mueve suavemente</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">5</td><td>Distancia se calcula correctamente</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">6</td><td>ETA se calcula (distancia / 0.4 km/min)</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">7</td><td>Mapa Leaflet carga correctamente</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">8</td><td>Markers se ven (azul=cliente, naranja=delivery)</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 14. EDGE CASES ==================== -->
+    <div class="section" id="sec-edge">
+        <div class="section-header" onclick="toggleSection(this)">
+            <h2>⚠️ Casos Borde y Error</h2>
+            <span class="badge badge-count" data-count>0 pruebas</span>
+            <span class="arrow">▼</span>
+        </div>
+        <div class="section-body">
+            <div class="perspective">
+                <table>
+                    <tr><th class="num">#</th><th>Prueba</th><th class="chk">✓</th><th class="chk">✗</th><th class="obs">Obs</th></tr>
+                    <tr><td class="num">1</td><td>Pasajero pide sin loguearse (token anónimo)</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">2</td><td>Delivery sin foto bloqueado</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">3</td><td>GPS apagado en delivery → barra roja</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">4</td><td>Refrescar pedidos.html pierde carrito</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">5</td><td>Refrescar mesa.html recupera pedido activo</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">6</td><td>Cerrar sesión y volver a entrar</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">7</td><td>Múltiples productos de mismo restaurante</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">8</td><td>Pedido con 0 productos no se envía</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">9</td><td>Pin de 4 dígitos no acepta letras</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">10</td><td>Intentar cobrar pedido ya cobrado</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">11</td><td>Intentar tomar pedido ya asignado a otro</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                    <tr><td class="num">12</td><td>Palabra secreta case-insensitive</td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="chk"><input type="checkbox" onchange="updateStats()"></td><td class="obs"><input type="text"></td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="failed-section" id="failedSection">
+        <h3>❌ Puntos a Corregir</h3>
+        <div id="failedList"><em style="color:#888">No hay fallas registradas</em></div>
+    </div>
+
+    <div class="last-saved" id="lastSaved"></div>
+
+</div>
+
+<script>
+const STORAGE_KEY = "urbanflow_testing_v1";
+
+function toggleSection(header) {
+    const body = header.nextElementSibling;
+    body.classList.toggle("hidden");
+    header.classList.toggle("collapsed");
+}
+
+function saveToStorage() {
+    const data = {};
+    document.querySelectorAll('input[type="checkbox"]').forEach((cb, i) => {
+        data["cb_" + i] = cb.checked;
+    });
+    document.querySelectorAll('input[type="text"]').forEach((inp, i) => {
+        data["obs_" + i] = inp.value;
+    });
+    data["_date"] = new Date().toISOString();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function loadFromStorage() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        document.querySelectorAll('input[type="checkbox"]').forEach((cb, i) => {
+            if (data.hasOwnProperty("cb_" + i)) cb.checked = data["cb_" + i];
+        });
+        document.querySelectorAll('input[type="text"]').forEach((inp, i) => {
+            if (data.hasOwnProperty("obs_" + i)) inp.value = data["obs_" + i];
+        });
+    } catch(e) {}
+}
+
+function updateStats() {
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    let total = 0, ok = 0, fail = 0, pending = 0;
+    checkboxes.forEach(cb => {
+        const row = cb.closest('tr');
+        if (!row) return;
+        const okBox = row.querySelectorAll('input[type="checkbox"]')[0];
+        const failBox = row.querySelectorAll('input[type="checkbox"]')[1];
+        if (!okBox || !failBox) return;
+        total++;
+        if (okBox.checked) ok++;
+        else if (failBox.checked) fail++;
+        else pending++;
+    });
+    document.getElementById('sTotal').textContent = total;
+    document.getElementById('sOk').textContent = ok;
+    document.getElementById('sFail').textContent = fail;
+    document.getElementById('sPending').textContent = pending;
+    const pct = total > 0 ? Math.round(ok / total * 100) : 0;
+    document.getElementById('sPct').textContent = pct + "%";
+
+    document.querySelectorAll('.section').forEach(sec => {
+        const inputs = sec.querySelectorAll('input[type="checkbox"]');
+        let secTotal = 0, secOk = 0, secFail = 0;
+        inputs.forEach(cb => {
+            const row = cb.closest('tr');
+            if (!row) return;
+            const boxes = row.querySelectorAll('input[type="checkbox"]');
+            if (boxes.length >= 2) {
+                secTotal++;
+                if (boxes[0].checked) secOk++;
+                else if (boxes[1].checked) secFail++;
+            }
+        });
+        const badge = sec.querySelector('.badge-count');
+        if (badge) {
+            const secPending = secTotal - secOk - secFail;
+            badge.textContent = secTotal + " pruebas | " + secOk + "✓ " + secFail + "✗ " + secPending + "⏳";
+        }
+    });
+
+    showFailedList();
+    saveToStorage();
+    checkCompletion(total, ok, fail, pending);
+}
+
+function showFailedList() {
+    const container = document.getElementById('failedList');
+    if (!container) return;
+    container.innerHTML = '';
+    document.querySelectorAll('.section').forEach(sec => {
+        const secTitle = sec.querySelector('h2')?.textContent?.replace(/[📋🔐📱🛒📍💰🍳🍽️🚴⚙️💬🗺️⚠️]/g, '').trim() || "";
+        sec.querySelectorAll('tr').forEach(row => {
+            const boxes = row.querySelectorAll('input[type="checkbox"]');
+            if (boxes[1]?.checked) {
+                const desc = row.querySelectorAll('td')[1]?.textContent || "";
+                const obs = row.querySelector('input[type="text"]')?.value || "";
+                container.innerHTML += '<div class="fail-item"><span class="fail-sec">' + secTitle + '</span> ' + desc + (obs ? ' <em>(' + obs + ')</em>' : '') + '</div>';
+            }
+        });
+    });
+}
+
+function checkCompletion(total, ok, fail, pending) {
+    const banner = document.getElementById('completionBanner');
+    if (!banner) return;
+    if (pending === 0 && total > 0 && fail === 0) {
+        banner.className = 'completion-banner show success';
+        banner.innerHTML = '<div class="completion-icon">🎉</div><h2>¡FELICIDADES! EL SISTEMA FUNCIONA PERFECTO</h2><p>' + total + ' pruebas completadas. 100% aprobado.</p><p style="font-size:12px;color:#8b949e;margin-top:8px">Falta integrar la pasarela de pagos (Mercado Pago).</p>';
+    } else if (pending === 0 && total > 0 && fail > 0) {
+        banner.className = 'completion-banner show warning';
+        banner.innerHTML = '<div class="completion-icon">⚠️</div><h2>TESTING COMPLETADO - ' + Math.round(ok/total*100) + '% APROBADO</h2><p>' + ok + ' de ' + total + ' pruebas pasaron. ' + fail + ' requieren corrección.</p>';
+    } else {
+        banner.className = 'completion-banner';
+        banner.innerHTML = '';
+    }
+}
+
+function resetAll() {
+    if (!confirm("¿Limpiar todos los resultados?")) return;
+    document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+    document.querySelectorAll('input[type="text"]').forEach(inp => inp.value = "");
+    localStorage.removeItem(STORAGE_KEY);
+    updateStats();
+}
+
+function exportResults() {
+    let text = "URBANFLOW - RESULTADOS DE TESTING\n";
+    text += "Fecha: " + new Date().toLocaleString() + "\n\n";
+    let total = 0, ok = 0, fail = 0, pending = 0;
+    document.querySelectorAll('.section').forEach(sec => {
+        const title = sec.querySelector('h2')?.textContent || "";
+        text += "\n=== " + title + " ===\n";
+        sec.querySelectorAll('tr').forEach(row => {
+            const num = row.querySelector('td.num')?.textContent || "";
+            const desc = row.querySelectorAll('td')[1]?.textContent || "";
+            const boxes = row.querySelectorAll('input[type="checkbox"]');
+            let status = "⏳ Pendiente";
+            if (boxes[0]?.checked) { status = "✓ Funciona"; ok++; total++; }
+            else if (boxes[1]?.checked) { status = "✗ No funciona"; fail++; total++; }
+            else { pending++; total++; }
+            const obs = row.querySelector('input[type="text"]')?.value || "";
+            if (num && desc) text += num + ". " + desc + " → " + status + (obs ? " (" + obs + ")" : "") + "\n";
+        });
+    });
+    text += "\n=== RESUMEN ===\n";
+    text += "Total: " + total + "\n";
+    text += "Funciona: " + ok + "\n";
+    text += "No funciona: " + fail + "\n";
+    text += "Pendiente: " + pending + "\n";
+    text += "% Aprobado: " + (total > 0 ? Math.round(ok/total*100) : 0) + "%\n";
+    if (fail > 0) {
+        text += "\n=== PUNTOS A CORREGIR ===\n";
+        document.querySelectorAll('.section').forEach(sec => {
+            sec.querySelectorAll('tr').forEach(row => {
+                const boxes = row.querySelectorAll('input[type="checkbox"]');
+                if (boxes[1]?.checked) {
+                    const desc = row.querySelectorAll('td')[1]?.textContent || "";
+                    const obs = row.querySelector('input[type="text"]')?.value || "";
+                    text += "- " + desc + (obs ? " (" + obs + ")" : "") + "\n";
+                }
+            });
+        });
+    }
+    const blob = new Blob([text], { type: "text/plain" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "testing_urbanflow_" + new Date().toISOString().slice(0,10) + ".txt";
+    a.click();
+}
+
+loadFromStorage();
+updateStats();
+const lastDate = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}")._date;
+if (lastDate) {
+    document.getElementById('lastSaved').textContent = "Último guardado: " + new Date(lastDate).toLocaleString();
+}
+</script>
+
+</body>
+</html>
