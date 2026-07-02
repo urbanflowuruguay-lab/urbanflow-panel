@@ -103,6 +103,44 @@
         .reserva-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .reserva-cliente { font-weight: bold; color: #c9d1d9; font-size: 15px; }
         .reserva-detalles { color: #8b949e; font-size: 13px; line-height: 1.8; }
+
+        .test-summary { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 16px; }
+        .test-stat { background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 12px; text-align: center; }
+        .test-stat .num { font-size: 24px; font-weight: 700; }
+        .test-stat .label { font-size: 10px; color: #8b949e; text-transform: uppercase; }
+        .test-stat.total .num { color: #c9d1d9; }
+        .test-stat.ok .num { color: #7ee787; }
+        .test-stat.fail .num { color: #f85149; }
+        .test-stat.pend .num { color: #f0883e; }
+        .test-stat.pct .num { color: #58a6ff; }
+        .test-banner { display: none; text-align: center; padding: 24px; border-radius: 10px; margin-bottom: 16px; }
+        .test-banner.show { display: block; }
+        .test-banner.success { background: #23863622; border: 1px solid #238636; }
+        .test-banner.success h3 { color: #7ee787; }
+        .test-banner.warning { background: #f0883e22; border: 1px solid #f0883e; }
+        .test-banner.warning h3 { color: #f0883e; }
+        .test-section { background: #0d1117; border: 1px solid #30363d; border-radius: 8px; margin-bottom: 12px; overflow: hidden; }
+        .test-section-header { padding: 10px 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: #161b22; }
+        .test-section-header h4 { font-size: 13px; color: #c9d1d9; }
+        .test-section-header .tbadge { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #21262d; color: #8b949e; }
+        .test-section-body { padding: 0; }
+        .test-section-body.hidden { display: none; }
+        .test-row { display: flex; align-items: center; padding: 8px 14px; border-bottom: 1px solid #21262d; gap: 10px; }
+        .test-row:last-child { border-bottom: none; }
+        .test-row .t-num { width: 24px; font-size: 11px; color: #484f58; }
+        .test-row .t-desc { flex: 1; font-size: 12px; color: #c9d1d9; }
+        .test-row .t-obs { width: 120px; }
+        .test-row .t-obs input { width: 100%; padding: 4px 6px; background: #161b22; border: 1px solid #30363d; border-radius: 4px; color: #c9d1d9; font-size: 11px; }
+        .test-row input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: #238636; }
+        .test-row .t-label { font-size: 11px; width: 50px; text-align: center; }
+        .test-fail-list { background: #da363311; border: 1px solid #da363344; border-radius: 8px; padding: 14px; margin-top: 16px; }
+        .test-fail-list h4 { color: #f85149; font-size: 13px; margin-bottom: 8px; }
+        .test-fail-item { padding: 6px 0; border-bottom: 1px solid #da363322; font-size: 12px; color: #c9d1d9; }
+        .test-fail-item:last-child { border-bottom: none; }
+        .test-fail-sec { background: #da363333; color: #f85149; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; margin-right: 6px; }
+        .test-toolbar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+        .test-toolbar button { padding: 6px 14px; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; }
+        .test-saved { font-size: 10px; color: #484f58; text-align: center; margin-top: 8px; }
     </style>
 </head>
 <body>
@@ -149,6 +187,7 @@
         <div class="tab" id="tab_usuarios" onclick="switchTab('usuarios')">Usuarios</div>
         <div class="tab" id="tab_personal" onclick="switchTab('personal')">Control Personal</div>
         <div class="tab" id="tab_perfil" onclick="switchTab('perfil')">Perfil</div>
+        <div class="tab" id="tab_testing" onclick="switchTab('testing')" style="background:#f0883e22;color:#f0883e">🧪 Testing</div>
     </div>
 
     <div class="container" id="content"></div>
@@ -249,6 +288,7 @@ function switchTab(tab) {
     else if (tab === "usuarios") loadUsuarios();
     else if (tab === "personal") loadPersonal();
     else if (tab === "perfil") loadPerfil();
+    else if (tab === "testing") loadTesting();
 }
 
 function refreshBadges() {
@@ -1528,6 +1568,393 @@ sb.auth.getSession().then(({ data }) => {
 });
 
 setInterval(refreshBadges, 30000);
+
+// ==================== TESTING ====================
+const TEST_KEY = "uf_testing_" + (empresaId || "global");
+const TEST_DATA = [
+    { id: "vis", title: "📋 Visión General", tests: [
+        "pedidos.html carga correctamente",
+        "tracking.html carga correctamente",
+        "caja.html carga correctamente",
+        "cocina.html carga correctamente",
+        "camarero.html carga correctamente",
+        "delivery.html carga correctamente",
+        "mesa.html carga correctamente",
+        "hub.html carga y muestra 5 botones",
+        "index.html (admin) carga correctamente",
+        "Supabase conecta (sin errores en consola)",
+        "Tablas SQL existen (pedidos, mensajes_chat, usuarios_empresa, etc)",
+        "Columnas GPS en pedidos: delivery_lat, delivery_lon, palabra_secreta"
+    ]},
+    { id: "login", title: "🔐 Login y Autenticación", tests: [
+        "Pasajero: Login con email y contraseña",
+        "Pasajero: Sesión persiste al cerrar app",
+        "Trabajador: Login con Nombre + PIN de 4 dígitos",
+        "PIN incorrecto muestra error",
+        "Nombre no registrado muestra error",
+        "Rol incorrecto bloquea acceso",
+        "Cambiar PIN funciona",
+        "Delivery/camarero sin foto no puede entrar",
+        "Subir foto funciona",
+        "Admin: Login con Email + Contraseña (Auth)",
+        "Admin: Email del admin logueado se muestra",
+        "Admin: Cerrar Sesión funciona"
+    ]},
+    { id: "pasajero", title: "📱 Pasajero - App Móvil", tests: [
+        "Saludo personalizado con nombre",
+        "Grid de opciones funciona",
+        "Bottom nav: Home, Mapa, QR, Perfil",
+        "Modo día/noche funciona",
+        "Mapa muestra ubicación actual",
+        "Ícono del coche en el mapa se ve correcto",
+        "Botón centrar mapa funciona",
+        "Escribir destino muestra sugerencias",
+        "Seleccionar sugerencia llena el campo",
+        "Origen se llena con GPS automáticamente",
+        "Ruta se dibuja en el mapa",
+        "Precio estimado se muestra",
+        "Botón 'Buscar coche' funciona",
+        "Favoritos: agregar funciona",
+        "Favoritos: icono auto-detecta",
+        "Favoritos: eliminar funciona",
+        "Viaje: se busca chofer disponible",
+        "Viaje: ubicación chofer en tiempo real",
+        "Persiste viaje activo al cerrar app"
+    ]},
+    { id: "pedidos", title: "🛒 Pedidos Web (pedidos.html)", tests: [
+        "Pide permiso de ubicación",
+        "Muestra restaurantes cercanos con foto",
+        "Muestra distancia al restaurante",
+        "Scroll horizontal funciona",
+        "Buscar 'pizza' muestra productos de todos los negocios",
+        "Click en restaurante filtra sus productos",
+        "Productos muestran foto, nombre, precio, restaurante",
+        "Solo muestra negocios activos y aprobados",
+        "Click en producto abre modal con foto",
+        "Muestra leyenda '¿Necesitas solo esto o algo más?'",
+        "Cambiar cantidad (+ / -) actualiza precio",
+        "'Agregar al pedido' agrega al carrito",
+        "Barra inferior muestra cantidad y total",
+        "Abrir carrito muestra productos correctos",
+        "Nota opcional funciona",
+        "Total se calcula correctamente",
+        "'Pedir ahora' envía pedido a Supabase",
+        "Pantalla confirmación 'Pedido enviado'",
+        "Botón 'Seguir mi pedido' abre tracking",
+        "Pedido llega a caja con datos correctos"
+    ]},
+    { id: "tracking", title: "📍 Tracking Cliente (tracking.html)", tests: [
+        "Mapa carga con ubicación del cliente",
+        "Punto azul = cliente, naranja = delivery",
+        "Punto del delivery se mueve en tiempo real",
+        "Distancia y ETA se muestran",
+        "Nombre del delivery se muestra",
+        "Barra de estado cambia según fase",
+        "Enviar mensaje al delivery funciona",
+        "Mensajes automáticos se ven diferentes",
+        "Cuando delivery llega → palabra secreta",
+        "Palabra incorrecta → error",
+        "Palabra correcta → pedido se cierra",
+        "Aparece calificación con estrellas",
+        "Calificación se guarda en BD"
+    ]},
+    { id: "caja", title: "💰 Caja (caja.html)", tests: [
+        "Pedido nuevo aparece con estado RECIBIDO",
+        "'🍳 A cocina' envía pedido a cocina",
+        "Chat automático 'preparando' se envía",
+        "Resumen: por cobrar / cobrado / devoluciones",
+        "Auto-refresh cada 8 segundos",
+        "Pedido LISTO muestra 'Asignar Delivery'",
+        "Modal muestra deliverys disponibles",
+        "Seleccionar delivery genera palabra secreta",
+        "Chat automático a delivery con palabra",
+        "Chat automático a cliente 'va en camino'",
+        "'🗺️ Ver mapa' muestra ubicación delivery",
+        "Mapa se actualiza cada 5 segundos",
+        "'💰 Cobrar' cambia a PAGADO",
+        "Aparece en pestaña 'Cobrados'",
+        "'↩️ Devolver' cambia a DEVUELTO",
+        "Resumen se actualiza al cobrar/devolver",
+        "📞 Llamar a delivery funciona",
+        "📞 Llamar a cliente funciona",
+        "Chat caja-delivery funciona"
+    ]},
+    { id: "cocina", title: "🍳 Cocina (cocina.html)", tests: [
+        "Pedidos nuevos aparecen con badge NUEVO",
+        "Sonido cuando llega pedido nuevo",
+        "'En preparación' cambia a PREPARANDO",
+        "'✅ Listo' cambia estado y envía chats",
+        "Chat automático a caja 'pedido listo'",
+        "Chat automático a cliente 'pedido listo'",
+        "Polling cada 10 segundos",
+        "Tiempo transcurrido se muestra",
+        "Stats: Nuevos / Preparando / Listos",
+        "Mesas para limpiar aparecen",
+        "'✔️ Lista' cambia mesa a disponible",
+        "Historial muestra pedidos completados",
+        "Comentarios se guardan"
+    ]},
+    { id: "camarero", title: "🍽️ Camarero (camarero.html)", tests: [
+        "Pedidos listos aparecen para entregar",
+        "'✅ Entregado a mesa' funciona",
+        "Grid de mesas con colores",
+        "Marcar mesa 'limpieza' funciona",
+        "Cocina ve 'Mesas para limpiar'",
+        "Foto del camarero forzada al login",
+        "Tiempo de delivery se muestra",
+        "Historial muestra pedidos entregados"
+    ]},
+    { id: "delivery", title: "🚴 Delivery (delivery.html)", tests: [
+        "Pedidos listos aparecen como DISPONIBLE",
+        "'📦 Tomar pedido' funciona",
+        "Chat automático 'Voy camino'",
+        "Palabra secreta se muestra",
+        "GPS se activa (barra verde)",
+        "Barra roja si GPS apagado",
+        "GPS actualiza posición cada 5 segundos",
+        "Posición se guarda en pedidos",
+        "'🗺️ Navegar' abre Google Maps",
+        "'📍 Llegué' notifica al cliente",
+        "'✅ Entregado' abre modal palabra",
+        "Palabra incorrecta → error",
+        "Palabra correcta → ENTREGADO + chat",
+        "'⚠️ Problema' envía motivo a caja",
+        "Pedido se quita de activos tras problema",
+        "Chat delivery-caja funciona",
+        "Historial muestra tiempos",
+        "Comentarios se guardan"
+    ]},
+    { id: "mesa", title: "🍽️ Mesa - QR (mesa.html)", tests: [
+        "QR abre mesa.html con token correcto",
+        "Portada muestra tema del restaurante",
+        "Rating promedio se muestra en portada",
+        "'ENTRAR' abre menú",
+        "Categorías dinámicas se muestran",
+        "Productos con foto y precio",
+        "Solo productos activos se muestran",
+        "'Pedir' envía pedido con 'Mesa #X'",
+        "Pedido llega a caja",
+        "Estado se actualiza en mesa.html",
+        "Foto del camarero aparece cuando listo",
+        "'FINALIZAR' solo aparece cuando entregado",
+        "Calificación funciona",
+        "Refrescar recupera pedido activo"
+    ]},
+    { id: "admin", title: "⚙️ Admin Panel (index.html)", tests: [
+        "Dashboard muestra estadísticas",
+        "Pedidos con filtros funciona",
+        "CRUD de usuarios funciona",
+        "CRUD de productos funciona",
+        "Activar/desactivar productos",
+        "Categorías dinámicas CRUD",
+        "QR de mesas se muestra",
+        "Reservas: confirmar/rechazar",
+        "Control personal muestra trabajadores",
+        "Perfil: editar nombre, dirección",
+        "Logo y foto se actualizan"
+    ]},
+    { id: "chat", title: "💬 Chat - Mensajería", tests: [
+        "Cocina 'Listo' → chat a caja",
+        "Cocina 'Listo' → chat a cliente",
+        "Caja 'A cocina' → chat a cliente",
+        "Caja asigna → chat a delivery con palabra",
+        "Caja asigna → chat a cliente 'en camino'",
+        "Delivery 'Llegué' → chat a cliente",
+        "Delivery 'Entregado' → chat a cliente",
+        "Delivery 'Problema' → chat a caja",
+        "Chat manual caja-delivery funciona",
+        "Chat manual cliente-delivery funciona",
+        "Mensajes se guardan en mensajes_chat"
+    ]},
+    { id: "gps", title: "🗺️ GPS y Mapas", tests: [
+        "Delivery actualiza GPS cada 5 segundos",
+        "Caja ve ubicación del delivery",
+        "Cliente ve ubicación del delivery",
+        "Punto del delivery se mueve suavemente",
+        "Distancia se calcula correctamente",
+        "ETA se calcula",
+        "Mapa Leaflet carga correctamente",
+        "Markers se ven (azul/naranja)"
+    ]},
+    { id: "edge", title: "⚠️ Casos Borde", tests: [
+        "Pasajero pide sin loguearse (token anónimo)",
+        "Delivery sin foto bloqueado",
+        "GPS apagado → barra roja",
+        "Refrescar pedidos.html pierde carrito",
+        "Refrescar mesa.html recupera pedido",
+        "Múltiples productos de mismo restaurante",
+        "Pedido con 0 productos no se envía",
+        "PIN no acepta letras",
+        "Palabra secreta case-insensitive"
+    ]}
+];
+
+function loadTesting() {
+    const c = document.getElementById("content");
+    const saved = JSON.parse(localStorage.getItem(TEST_KEY) || "{}");
+    let html = '<div class="test-summary" id="testSummary"></div>';
+    html += '<div class="test-banner" id="testBanner"></div>';
+    html += '<div class="test-toolbar">';
+    html += '<button class="btn btn-danger" onclick="resetTesting()">🔄 Limpiar Todo</button>';
+    html += '<button class="btn btn-success" onclick="exportTesting()">📊 Exportar TXT</button>';
+    html += '<button class="btn btn-secondary" onclick="expandAllTesting()">📂 Expandir todo</button>';
+    html += '<button class="btn btn-secondary" onclick="collapseAllTesting()">📁 Colapsar todo</button>';
+    html += '</div>';
+    html += '<div class="test-saved" id="testSaved"></div>';
+
+    let idx = 0;
+    TEST_DATA.forEach(sec => {
+        html += '<div class="test-section" id="testsec_' + sec.id + '">';
+        html += '<div class="test-section-header" onclick="toggleTestSection(\'' + sec.id + '\')">';
+        html += '<h4>' + sec.title + '</h4>';
+        html += '<span class="tbadge" id="tbadge_' + sec.id + '">0/' + sec.tests.length + '</span>';
+        html += '</div>';
+        html += '<div class="test-section-body" id="tbody_' + sec.id + '">';
+        sec.tests.forEach((t, i) => {
+            const okChecked = saved["t_" + idx + "_ok"] ? "checked" : "";
+            const failChecked = saved["t_" + idx + "_fail"] ? "checked" : "";
+            const obs = saved["t_" + idx + "_obs"] || "";
+            html += '<div class="test-row">';
+            html += '<span class="t-num">' + (i+1) + '</span>';
+            html += '<input type="checkbox" id="tok_' + idx + '" ' + okChecked + ' onchange="onTestChange()">';
+            html += '<span class="t-label" style="color:#7ee787">✓</span>';
+            html += '<input type="checkbox" id="tfail_' + idx + '" ' + failChecked + ' onchange="onTestChange()">';
+            html += '<span class="t-label" style="color:#f85149">✗</span>';
+            html += '<span class="t-desc">' + t + '</span>';
+            html += '<div class="t-obs"><input type="text" id="tobs_' + idx + '" value="' + obs.replace(/"/g, '&quot;') + '" placeholder="Obs..." onchange="onTestChange()"></div>';
+            html += '</div>';
+            idx++;
+        });
+        html += '</div></div>';
+    });
+
+    html += '<div class="test-fail-list" id="testFailList" style="display:none"><h4>❌ Puntos a Corregir</h4><div id="testFailItems"></div></div>';
+
+    c.innerHTML = html;
+    updateTestStats();
+}
+
+function toggleTestSection(id) {
+    const body = document.getElementById("tbody_" + id);
+    body.classList.toggle("hidden");
+}
+
+function expandAllTesting() { document.querySelectorAll('.test-section-body').forEach(b => b.classList.remove('hidden')); }
+function collapseAllTesting() { document.querySelectorAll('.test-section-body').forEach(b => b.classList.add('hidden')); }
+
+function onTestChange() { updateTestStats(); saveTestStorage(); }
+
+function saveTestStorage() {
+    const data = {};
+    let idx = 0;
+    TEST_DATA.forEach(sec => {
+        sec.tests.forEach(() => {
+            data["t_" + idx + "_ok"] = document.getElementById("tok_" + idx)?.checked || false;
+            data["t_" + idx + "_fail"] = document.getElementById("tfail_" + idx)?.checked || false;
+            data["t_" + idx + "_obs"] = document.getElementById("tobs_" + idx)?.value || "";
+            idx++;
+        });
+    });
+    data._date = new Date().toISOString();
+    localStorage.setItem(TEST_KEY, JSON.stringify(data));
+    const el = document.getElementById("testSaved");
+    if (el) el.textContent = "Guardado: " + new Date().toLocaleString();
+}
+
+function updateTestStats() {
+    let total = 0, ok = 0, fail = 0, pend = 0;
+    const failedItems = [];
+
+    let globalIdx = 0;
+    TEST_DATA.forEach(sec => {
+        let secOk = 0;
+        sec.tests.forEach((t, i) => {
+            const okCb = document.getElementById("tok_" + globalIdx);
+            const failCb = document.getElementById("tfail_" + globalIdx);
+            if (!okCb || !failCb) { globalIdx++; return; }
+            total++;
+            if (okCb.checked) { ok++; secOk++; }
+            else if (failCb.checked) { fail++; failedItems.push({ sec: sec.title, desc: t, obs: document.getElementById("tobs_" + globalIdx)?.value || "" }); }
+            else { pend++; }
+            globalIdx++;
+        });
+        const badge = document.getElementById("tbadge_" + sec.id);
+        if (badge) badge.textContent = secOk + "/" + secTotal;
+    });
+
+    const pct = total > 0 ? Math.round(ok / total * 100) : 0;
+    const sumEl = document.getElementById("testSummary");
+    if (sumEl) {
+        sumEl.innerHTML = '<div class="test-stat total"><div class="num">' + total + '</div><div class="label">Total</div></div>' +
+            '<div class="test-stat ok"><div class="num">' + ok + '</div><div class="label">Funciona</div></div>' +
+            '<div class="test-stat fail"><div class="num">' + fail + '</div><div class="label">No funciona</div></div>' +
+            '<div class="test-stat pend"><div class="num">' + pend + '</div><div class="label">Pendiente</div></div>' +
+            '<div class="test-stat pct"><div class="num">' + pct + '%</div><div class="label">Aprobado</div></div>';
+    }
+
+    const banner = document.getElementById("testBanner");
+    if (banner && total > 0) {
+        if (pend === 0 && fail === 0) {
+            banner.className = "test-banner show success";
+            banner.innerHTML = '<h3>🎉 ¡FELICIDADES! EL SISTEMA FUNCIONA PERFECTO</h3><p>' + total + ' pruebas completadas. 100% aprobado.</p><p style="font-size:11px;color:#8b949e;margin-top:6px">Pendiente: integrar pasarela de pagos (Mercado Pago)</p>';
+        } else if (pend === 0 && fail > 0) {
+            banner.className = "test-banner show warning";
+            banner.innerHTML = '<h3>⚠️ Testing completado - ' + pct + '% aprobado</h3><p>' + ok + ' de ' + total + ' pasaron. ' + fail + ' requieren corrección.</p>';
+        } else {
+            banner.className = "test-banner";
+            banner.innerHTML = '';
+        }
+    }
+
+    const failList = document.getElementById("testFailList");
+    const failItems = document.getElementById("testFailItems");
+    if (failList && failItems) {
+        if (failedItems.length > 0) {
+            failList.style.display = "block";
+            failItems.innerHTML = failedItems.map(f => '<div class="test-fail-item"><span class="test-fail-sec">' + f.sec + '</span> ' + f.desc + (f.obs ? ' <em>(' + f.obs + ')</em>' : '') + '</div>').join("");
+        } else {
+            failList.style.display = "none";
+        }
+    }
+}
+
+function resetTesting() {
+    if (!confirm("¿Limpiar todos los resultados de testing?")) return;
+    localStorage.removeItem(TEST_KEY);
+    loadTesting();
+}
+
+function exportTesting() {
+    let text = "URBANFLOW - RESULTADOS DE TESTING\nEmpresa: " + (empresaData?.nombre || "") + "\nFecha: " + new Date().toLocaleString() + "\n\n";
+    let total = 0, ok = 0, fail = 0, pend = 0, failedList = [];
+    let globalIdx = 0;
+    TEST_DATA.forEach(sec => {
+        text += "\n=== " + sec.title + " ===\n";
+        sec.tests.forEach((t, i) => {
+            const okCb = document.getElementById("tok_" + globalIdx);
+            const failCb = document.getElementById("tfail_" + globalIdx);
+            const obs = document.getElementById("tobs_" + globalIdx)?.value || "";
+            let status = "⏳ Pendiente";
+            if (okCb?.checked) { status = "✓ Funciona"; ok++; }
+            else if (failCb?.checked) { status = "✗ No funciona"; fail++; failedList.push({ sec: sec.title, desc: t, obs }); }
+            else { pend++; }
+            total++;
+            text += (i+1) + ". " + t + " → " + status + (obs ? " (" + obs + ")" : "") + "\n";
+            globalIdx++;
+        });
+    });
+    text += "\n=== RESUMEN ===\n";
+    text += "Total: " + total + "\nFunciona: " + ok + "\nNo funciona: " + fail + "\nPendiente: " + pend + "\n% Aprobado: " + (total > 0 ? Math.round(ok/total*100) : 0) + "%\n";
+    if (failedList.length > 0) {
+        text += "\n=== PUNTOS A CORREGIR ===\n";
+        failedList.forEach(f => { text += "- [" + f.sec + "] " + f.desc + (f.obs ? " (" + f.obs + ")" : "") + "\n"; });
+    }
+    const blob = new Blob([text], { type: "text/plain" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "testing_" + (empresaData?.nombre || "urbanflow") + "_" + new Date().toISOString().slice(0,10) + ".txt";
+    a.click();
+}
 </script>
 </body>
 </html>
