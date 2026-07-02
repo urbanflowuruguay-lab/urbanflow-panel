@@ -160,6 +160,23 @@
         <button class="btn btn-primary" style="width:100%;padding:12px" onclick="login()">Iniciar Sesion</button>
         <p id="loginError" style="color:#da3633;text-align:center;margin-top:12px;display:none"></p>
     </div>
+    <button class="btn" style="width:100%;margin-top:12px;background:#f0883e22;color:#f0883e;border:1px solid #f0883e44;padding:12px;font-size:14px" onclick="showTesting()">🧪 Testing del Sistema</button>
+</div>
+
+<!-- TESTING SECTION -->
+<div id="testingSection" style="display:none">
+    <div class="header">
+        <div class="header-left">
+            <div>
+                <h1 style="color:#f0883e">🧪 Testing del Sistema</h1>
+                <span class="empresa-nombre">UrbanFlow - Checklist de pruebas</span>
+            </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+            <button class="btn" style="background:#30363d;color:#c9d1d9;border:1px solid #484f58;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px" onclick="hideTesting()">← Volver al Login</button>
+        </div>
+    </div>
+    <div class="container" id="testingContent"></div>
 </div>
 
 <!-- PANEL -->
@@ -273,6 +290,17 @@ function logout() {
     empresaId = "";
     empresaData = null;
     document.getElementById("panelSection").style.display = "none";
+    document.getElementById("loginSection").style.display = "block";
+}
+
+function showTesting() {
+    document.getElementById("loginSection").style.display = "none";
+    document.getElementById("testingSection").style.display = "block";
+    loadTestingIn("testingContent");
+}
+
+function hideTesting() {
+    document.getElementById("testingSection").style.display = "none";
     document.getElementById("loginSection").style.display = "block";
 }
 
@@ -1789,8 +1817,9 @@ const TEST_DATA = [
     ]}
 ];
 
-function loadTesting() {
-    const c = document.getElementById("content");
+function loadTestingIn(containerId) {
+    const c = document.getElementById(containerId);
+    if (!c) return;
     const saved = JSON.parse(localStorage.getItem(TEST_KEY) || "{}");
     let html = '<div class="test-summary" id="testSummary"></div>';
     html += '<div class="test-banner" id="testBanner"></div>';
@@ -1833,6 +1862,8 @@ function loadTesting() {
     c.innerHTML = html;
     updateTestStats();
 }
+
+function loadTesting() { loadTestingIn("content"); }
 
 function toggleTestSection(id) {
     const body = document.getElementById("tbody_" + id);
